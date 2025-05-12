@@ -1,0 +1,290 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* 移除這些顏色變數 */
+  --card-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+  --border-radius: 12px;
+  --container-width: 1200px;
+  --card-background: #ffffff;
+  --input-background: #f8f9fa;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 320px;
+  min-height: 100vh;
+  padding: 2rem;
+  transition: all var(--transition-speed) ease;
+  background-color: var(--background-primary);
+  color: var(--text-secondary);
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 1000;
+  padding: 0.8rem;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: var(--card-shadow);
+}
+
+.container {
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.upload-card {
+  border: 2px solid currentColor !important;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  transition: all var(--transition-speed) ease;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  background-color: var(--card-background);
+  color: var(--text-secondary);
+}
+
+.upload-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.upload-input {
+  border: 2px solid currentColor;
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  transition: all var(--transition-speed) ease;
+  background-color: var(--input-background);
+  color: var(--text-secondary);
+  width: 100%;
+}
+
+.upload-input:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.file-preview {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-top: 2px solid currentColor;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  background-color: var(--card-background);
+}
+
+.preview-item {
+  margin: 1rem 0;
+  padding: 0.8rem;
+  border-radius: var(--border-radius);
+  background-color: var(--card-background);
+  color: var(--text-secondary);
+  transition: all var(--transition-speed) ease;
+}
+
+.preview-item:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.continue-btn {
+  background-color: var(--text-secondary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all var(--transition-speed) ease;
+  margin-top: 2rem;
+}
+
+.continue-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+  background-color: var(--text-primary);
+  color: var(--text-secondary);
+}
+
+.continue-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button {
+  border-radius: 8px;
+  border: 2px solid currentColor !important;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--card-background);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease !important;
+}
+
+button:hover:not(:disabled) {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.card {
+  border: 2px solid currentColor !important;
+}
+
+.upload-card,
+.card,
+.preview-item {
+  background-color: var(--card-background);
+  color: var(--text-secondary);
+  border: 2px solid currentColor !important;
+}
+
+.upload-input,
+input[type="file"],
+.form-control {
+  background-color: var(--input-background);
+  color: var(--text-secondary);
+}
+
+button:not(.continue-btn) {
+  background-color: var(--card-background);
+  color: var(--text-secondary);
+  border: 2px solid currentColor !important;
+}
+
+input[type="file"]::file-selector-button {
+  background-color: var(--card-background);
+  color: var(--text-secondary);
+  border: 1px solid currentColor;
+  transition: all var(--transition-speed) ease;
+}
+
+h1, h2, h3, h4, h5, h6, p, span, label {
+  color: var(--text-secondary);
+}
+
+input[type="file"]::file-selector-button {
+  color: var(--text-secondary);
+  background-color: var(--card-background);
+  border: 1px solid currentColor;
+  transition: all var(--transition-speed) ease;
+}
+
+/* Calendar View Styles */
+.calendar-container {
+  margin: 2rem 0;
+  padding: 1rem;
+  background: var(--card-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.calendar-view {
+  overflow: hidden;
+  height: 600px;
+  position: relative;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: 80px repeat(5, 1fr);
+  position: sticky;
+  top: 0;
+  background: var(--card-background);
+  border-bottom: 1px solid currentColor;
+  z-index: 2;
+}
+
+.calendar-day {
+  padding: 1rem;
+  text-align: center;
+  font-weight: bold;
+  border-left: 1px solid currentColor;
+}
+
+.time-header {
+  padding: 1rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  overflow-y: auto;
+  height: calc(100% - 50px);
+}
+
+.time-slots {
+  position: sticky;
+  left: 0;
+  background: var(--card-background);
+  border-right: 1px solid currentColor;
+  z-index: 1;
+}
+
+.time-slot {
+  height: 60px;
+  padding: 0.5rem;
+  border-bottom: 1px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(13, 60px);
+  position: relative;
+}
+
+.interview-event {
+  padding: 0.5rem;
+  margin: 2px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  overflow: hidden;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.interview-event:hover {
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.interview-tooltip {
+  padding: 0.5rem;
+}
+
+.interview-tooltip p {
+  margin: 0.25rem 0;
+  white-space: nowrap;
+}

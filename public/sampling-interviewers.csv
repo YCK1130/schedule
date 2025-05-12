@@ -1,0 +1,4 @@
+id,name,email,specialization,availability
+1,John Smith,john.smith@company.com,Frontend,2025-05-10T09:00/2025-05-10T10:00,2025-05-10T14:00/2025-05-10T15:00
+2,Mary Johnson,mary.johnson@company.com,Backend,2025-05-10T10:00/2025-05-10T11:00,2025-05-11T09:00/2025-05-11T10:00
+3,Robert Lee,robert.lee@company.com,DevOps,2025-05-10T13:00/2025-05-10T14:00,2025-05-11T11:00/2025-05-11T12:00
