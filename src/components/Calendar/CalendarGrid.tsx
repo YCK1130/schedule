@@ -71,9 +71,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       Array.isArray(room?.availability.split(',')) &&
       room.availability.split(',').some(slot => isTimeInSlot(checkDate, slot))
     ) || [];
-    console.log('interviewers', interviewers);
-    console.log('interviewees', interviewees); 
-    console.log('rooms', rooms);
     return {
       interviewers: availableInterviewers,
       interviewees: availableInterviewees,
@@ -129,8 +126,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
               placement="auto"
               delay={{ show: 50, hide: 0 }}
               overlay={renderTooltip(date, timeSlot)}
+              trigger={['hover', 'click']}
               rootClose
-              trigger={['hover', 'focus']}
             >
               <div className={`time-slot-wrapper ${index % 2 === 1 ? 'half-hour' : ''}`}>
                 <CalendarTimeSlot

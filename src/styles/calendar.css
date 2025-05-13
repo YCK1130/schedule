@@ -3,7 +3,7 @@
   border-radius: var(--border-radius);
   border: 1px solid #ddd;
   margin: 1rem auto;
-  max-width: 1200px;
+  max-width: var(--card-max-width);
   height: calc(100vh - 300px);
   min-height: 600px;
   display: flex;
@@ -46,6 +46,40 @@
   grid-template-columns: 60px repeat(var(--calendar-grid-num), minmax(150px, 1fr));
   position: relative;
   background: white;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.calendar-grid:hover::-webkit-scrollbar {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.calendar-grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.calendar-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.calendar-grid::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.calendar-grid::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+/* 隱藏滾動條但保持功能 */
+.calendar-grid:not(:hover)::-webkit-scrollbar-thumb {
+  opacity: 0;
 }
 
 .calendar-header {
@@ -287,14 +321,16 @@
   border-radius: 4px !important;
   font-size: 0.9rem !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  max-width: none !important;
+  /* max-width: none !important; */
   color: #333 !important;
   z-index: 1500 !important;
+  text-align: left !important;
 }
 
 .availability-tooltip p {
   margin: 0.25rem 0;
   white-space: nowrap;
+  text-align: left;
 }
 
 /* 防止 tooltip 造成的版面跳動 */
@@ -314,23 +350,4 @@
   color: #333;
   border: 1px solid #ddd;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* 改進滾動條樣式 */
-.calendar-grid::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.calendar-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.calendar-grid::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 4px;
-}
-
-.calendar-grid::-webkit-scrollbar-thumb:hover {
-  background: #ccc;
 }

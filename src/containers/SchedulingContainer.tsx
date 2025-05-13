@@ -22,7 +22,7 @@ const SchedulingContainer: React.FC = () => {
   };
 
   return (
-    <Container className="py-5">
+    <Container className="py-2">
       <Row>
         <Col>
           <FileUploader

@@ -2,7 +2,6 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  max-width: 1280px;
 
   --transition-speed: 0.2s;
   --border-radius: 8px;
@@ -12,6 +11,7 @@
   --border-color: #666666;
   --default-grid-num: 7;
   --calendar-grid-num: var(--default-grid-num);
+  --card-max-width: calc(150px * var(--default-grid-num) + 60px);
 }
 
 body {
