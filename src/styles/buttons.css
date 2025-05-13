@@ -1,0 +1,75 @@
+/* 統一按鈕基礎樣式 */
+button, 
+.btn,
+.upload-card .btn-sm {
+  transition: all 0.2s ease;
+  /* border: 1px solid transparent; */
+}
+
+.upload-card .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background-color: transparent;
+  margin: 0 0.5rem;
+}
+
+/* 範例按鈕樣式 */
+.upload-card .btn-outline-secondary {
+  color: #666;
+  font-weight: 500;
+}
+
+.upload-card .btn-outline-secondary:hover {
+  background-color: #f8f8f8;
+  color: #333;
+  border-color: #333;
+}
+
+/* 試用按鈕樣式 */
+.upload-card .btn-outline-info {
+  color:rgb(1, 65, 133);
+  border: 1px solid rgb(1, 65, 133);
+  font-weight: 500;
+}
+
+.upload-card .btn-outline-info:hover {
+  background-color: #f8f8f8;
+  color: #003d82;
+  border-color: #003d82;
+}
+
+/* 上傳按鈕樣式 - 使用高特異性選擇器 */
+.upload-card .form-control.upload-input,
+input[type="file"].upload-input.form-control {
+  border: 1px solid #ddd !important;
+  outline: none !important;
+}
+
+.upload-card .form-control.upload-input:hover,
+input[type="file"].upload-input.form-control:hover {
+  border-color: #666 !important;
+}
+
+/* Continue 按鈕樣式 */
+.continue-btn {
+  background-color: #f8f8f8;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  transition: all 0.2s ease;
+}
+
+.continue-btn:hover:not(:disabled) {
+  background-color: #333;
+  color: #f8f8f8;
+  border-color: #333;
+}
+
+.continue-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

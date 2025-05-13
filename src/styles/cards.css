@@ -1,0 +1,83 @@
+.upload-card {
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.tooltip {
+  font-size: 0.875rem;
+}
+
+.tooltip ul {
+  margin-top: 0.5rem;
+}
+
+.file-preview {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-top: 1px solid #ddd;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  background-color: transparent;
+}
+
+.preview-item {
+  margin: 1rem 0;
+  padding: 0.8rem;
+  border-radius: var(--border-radius);
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+}
+
+.file-upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  gap: 1rem;
+}
+
+.file-upload-header label {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  height: 31px;
+}
+
+.file-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* 響應式設計 */
+@media (max-width: 1000px) {
+  .file-upload-row {
+    flex-direction: column !important;
+  }
+  
+  .file-upload-col {
+    width: 100% !important;
+    margin-bottom: 1.5rem;
+  }
+  
+  .file-upload-col:last-child {
+    margin-bottom: 0;
+  }
+
+  .file-upload-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .file-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

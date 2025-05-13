@@ -1,0 +1,4 @@
+id,name,email,positionApplied,availability
+101,Alex Chen,alex.chen@email.com,Frontend Developer,"2025-05-10T09:00/2025-05-10T10:00,2025-05-10T13:00/2025-05-10T14:00"
+102,Sarah Kim,sarah.kim@email.com,Backend Developer,"2025-05-10T10:00/2025-05-10T11:00,2025-05-11T09:00/2025-05-11T10:00"
+103,David Garcia,david.garcia@email.com,DevOps Engineer,"2025-05-10T14:00/2025-05-10T15:00,2025-05-11T11:00/2025-05-11T12:00,2025-05-20T17:00/2025-05-20T18:00"

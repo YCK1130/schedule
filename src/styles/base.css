@@ -1,0 +1,37 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  max-width: 1280px;
+
+  --transition-speed: 0.2s;
+  --border-radius: 8px;
+  --container-width: 1200px;
+  --card-background: #ffffff;
+  --text-color: #333333;
+  --border-color: #666666;
+  --default-grid-num: 7;
+  --calendar-grid-num: var(--default-grid-num);
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 320px;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #ffffff;
+  color: var(--text-color);
+}
+
+a {
+  font-weight: 500;
+  color: #0056b3;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #003d82;
+}

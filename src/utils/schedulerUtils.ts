@@ -21,14 +21,14 @@ export function scheduleInterviews(
     for (const intervieweeSlot of interviewee.availability) {
       // Find an available interviewer
       const availableInterviewer: Interviewer | undefined = availableInterviewers.find((interviewer: Interviewer): boolean => 
-        interviewer.availability.some((slot: string): boolean => slot === intervieweeSlot)
+        interviewer.availability?.split(',').some((slot: string): boolean => slot === intervieweeSlot)
       );
       
       if (!availableInterviewer) continue;
       
       // Find an available room
       const availableRoom: Room | undefined = availableRooms.find((room: Room): boolean => 
-        room.availability.some((slot: string): boolean => slot === intervieweeSlot)
+        room.availability?.split(',').some((slot: string): boolean => slot === intervieweeSlot)
       );
       
       if (!availableRoom) continue;
@@ -47,12 +47,12 @@ export function scheduleInterviews(
       });
       
       // Remove the booked slot from availability
-      availableInterviewer.availability = availableInterviewer.availability.filter(
+      availableInterviewer.availability = availableInterviewer.availability?.split(',').filter(
         slot => slot !== intervieweeSlot
-      );
-      availableRoom.availability = availableRoom.availability.filter(
+      ).join(',');
+      availableRoom.availability = availableRoom.availability?.split(',').filter(
         slot => slot !== intervieweeSlot
-      );
+      ).join(',');
       
       // Move to next interviewee once scheduled
       break;
@@ -67,30 +67,30 @@ export function scheduleInterviews(
  */
 export function parseInterviewers(data: any[]): Interviewer[] {
   return data.map(row => ({
-    id: row.id || String(Math.random()).slice(2, 10),
+    id: row.id?.toString() || String(Math.random()).slice(2, 10),
     name: row.name,
     email: row.email,
-    availability: parseAvailability(row.availability),
+    availability: parseAvailability(row.availability).join(','),
     specialization: row.specialization
   }));
 }
 
 export function parseInterviewees(data: any[]): Interviewee[] {
   return data.map(row => ({
-    id: row.id || String(Math.random()).slice(2, 10),
+    id: row.id?.toString() || String(Math.random()).slice(2, 10),
     name: row.name,
     email: row.email,
     positionApplied: row.positionApplied || row.position,
-    availability: parseAvailability(row.availability)
+    availability: parseAvailability(row.availability).join(',')
   }));
 }
 
 export function parseRooms(data: any[]): Room[] {
   return data.map(row => ({
-    id: row.id || String(Math.random()).slice(2, 10),
+    id: row.id?.toString() || String(Math.random()).slice(2, 10),
     name: row.name,
     capacity: parseInt(row.capacity) || 2,
-    availability: parseAvailability(row.availability)
+    availability: parseAvailability(row.availability).join(',')
   }));
 }
 
@@ -98,7 +98,23 @@ export function parseRooms(data: any[]): Room[] {
  * Helper to parse availability from CSV format to array
  * Expects format like "2025-05-10T09:00/2025-05-10T10:00,2025-05-10T14:00/2025-05-10T15:00"
  */
-function parseAvailability(availabilityStr: string): string[] {
+function parseAvailability(availabilityStr: string | string[]): string[] {
   if (!availabilityStr) return [];
-  return availabilityStr.split(',').map(slot => slot.trim());
+  
+  // 處理 CSV 中的多個時間區段
+  if (typeof availabilityStr === 'string') {
+    return availabilityStr.split(',')
+      .map(slot => slot.trim())
+      .filter(slot => slot.includes('/')); // 確保時間格式正確
+  }
+  
+  // 如果已經是陣列格式，確保每個元素都是字串
+  if (Array.isArray(availabilityStr)) {
+    return availabilityStr
+      .filter((slot): slot is string => typeof slot === 'string')
+      .map(slot => slot.trim())
+      .filter(slot => slot.includes('/'));
+  }
+
+  return [];
 }
