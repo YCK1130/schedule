@@ -1,0 +1,45 @@
+{
+  "normal": [
+    {
+      "id": "c1",
+      "name": "陳申請者",
+      "email": "chen@example.com",
+      "positionApplied": "前端工程師",
+      "availability": "2025-05-20T09:00:00/2025-05-20T10:00:00,2025-05-20T14:00:00/2025-05-20T15:00:00"
+    },
+    {
+      "id": "c2",
+      "name": "林申請者",
+      "email": "lin@example.com",
+      "positionApplied": "後端工程師",
+      "availability": "2025-05-20T10:00:00/2025-05-20T11:00:00,2025-05-20T15:00:00/2025-05-20T16:00:00"
+    }
+  ],
+  "limited": [
+    {
+      "id": "c3",
+      "name": "黃申請者",
+      "email": "huang@example.com",
+      "positionApplied": "全端工程師",
+      "availability": "2025-05-20T09:00:00/2025-05-20T10:00:00"
+    }
+  ],
+  "flexible": [
+    {
+      "id": "c4",
+      "name": "吳申請者",
+      "email": "wu@example.com",
+      "positionApplied": "DevOps 工程師",
+      "availability": "2025-05-20T09:00:00/2025-05-20T17:00:00"
+    }
+  ],
+  "unavailable": [
+    {
+      "id": "c5",
+      "name": "趙申請者",
+      "email": "zhao@example.com",
+      "positionApplied": "資安工程師",
+      "availability": ""
+    }
+  ]
+}
