@@ -1,22 +1,19 @@
 import React from 'react';
 import { Card, ListGroup } from 'react-bootstrap';
-import type { Interviewee, Interviewer, Room } from '../types';
+import type { Interviewee, Interviewer } from '../types';
 
 interface StatusDisplayProps {
   interviewers: Interviewer[];
   interviewees: Interviewee[];
-  rooms: Room[];
   dataLoaded: {
     interviewers: boolean;
     interviewees: boolean;
-    rooms: boolean;
   };
 }
 
-const StatusDisplay: React.FC<StatusDisplayProps> = ({
+export const StatusDisplay: React.FC<StatusDisplayProps> = ({
   interviewers,
   interviewees,
-  rooms,
   dataLoaded,
 }) => {
   return (
@@ -43,16 +40,13 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({
             <span className="text-secondary">Not loaded</span>
           )}
         </ListGroup.Item>
-        <ListGroup.Item>
-          <strong>Rooms:</strong>{' '}
-          {dataLoaded.rooms ? (
-            <span className="text-success">
-              {rooms.length} loaded
-            </span>
-          ) : (
-            <span className="text-secondary">Not loaded</span>
-          )}
-        </ListGroup.Item>
+        <div className="scheduling-requirements">
+            <h6>排程要求：</h6>
+            <ul>
+              <li>每場面試需要 2 位面試官</li>
+              <li>每場面試需要 1 位面試者</li>
+            </ul>
+          </div>
       </ListGroup>
     </Card>
   );

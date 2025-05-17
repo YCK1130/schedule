@@ -14,21 +14,12 @@ export interface Interviewee {
   availability: string; // ISO date strings in format "2025-05-10T09:00/2025-05-10T10:00"
 }
 
-export interface Room {
-  id: string;
-  name: string;
-  capacity: number;
-  availability: string; // ISO date strings in format "2025-05-10T09:00/2025-05-10T10:00"
-}
-
 export interface ScheduledInterview {
-  interviewerId: string;
-  interviewerName: string;
-  intervieweeId: string;
-  intervieweeName: string;
+  interviewerIds: string[];
+  interviewerNames: string[];
+  intervieweeIds: string[];
+  intervieweeNames: string[];
   startTime: string;
   endTime: string;
-  roomId: string;
-  roomName?: string;
   position?: string;
 }

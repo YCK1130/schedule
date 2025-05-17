@@ -33,9 +33,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ scheduledInterviews }) => {
   const renderTooltip = (interview: ScheduledInterview) => (
     <Tooltip>
       <div className="interview-tooltip">
-        <p><strong>面試者：</strong> {interview.intervieweeName}</p>
-        <p><strong>面試官：</strong> {interview.interviewerName}</p>
-        <p><strong>房間：</strong> {interview.roomName}</p>
+        <p><strong>面試者：</strong> {interview.intervieweeNames.join(", ")}</p>
+        <p><strong>面試官：</strong> {interview.interviewerNames.join(", ")}</p>
         <p><strong>時間：</strong> {new Date(interview.startTime).toLocaleTimeString()}</p>
         <p><strong>職位：</strong> {interview.position}</p>
       </div>
@@ -60,7 +59,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ scheduledInterviews }) => {
           <div className="events-grid">
             {scheduledInterviews.map(interview => (
               <OverlayTrigger
-                key={`${interview.intervieweeId}-${interview.startTime}`}
+                key={`${interview.intervieweeIds.join(",")}-${interview.startTime}`}
                 placement="auto"
                 overlay={renderTooltip(interview)}
               >
@@ -69,10 +68,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ scheduledInterviews }) => {
                   style={{
                     gridColumn: `${new Date(interview.startTime).getDay()}`,
                     gridRow: `${new Date(interview.startTime).getHours() - 6}`,
-                    backgroundColor: getInterviewerColor(interview.interviewerId),
+                    backgroundColor: getInterviewerColor(interview.interviewerIds[0]),
                   }}
                 >
-                  {interview.intervieweeName}
+                  {interview.intervieweeNames.join(", ")}
                 </div>
               </OverlayTrigger>
             ))}

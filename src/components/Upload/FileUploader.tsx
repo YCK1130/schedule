@@ -3,21 +3,26 @@ import type { ChangeEvent } from 'react';
 import React, { useState } from 'react';
 import { Button, Card, Col, Form, OverlayTrigger, Row, Tooltip } from 'react-bootstrap';
 import * as XLSX from 'xlsx';
+import type { ComparisonOperator } from '../../contexts/SchedulingContext';
+import { useScheduling } from '../../contexts/SchedulingContext';
 
 interface FileUploaderProps {
   onInterviewersLoaded: (data: any[]) => void;
   onIntervieweesLoaded: (data: any[]) => void;
-  onRoomsLoaded: (data: any[]) => void;
 }
 
 const FileUploader: React.FC<FileUploaderProps> = ({ 
   onInterviewersLoaded, 
-  onIntervieweesLoaded, 
-  onRoomsLoaded 
+  onIntervieweesLoaded 
 }) => {
+  const { 
+    groupRestrictions,
+    updateGroupRestriction
+  } = useScheduling();
   const [interviewersFileName, setInterviewersFileName] = useState<string>('');
   const [intervieweesFileName, setIntervieweesFileName] = useState<string>('');
-  const [roomsFileName, setRoomsFileName] = useState<string>('');
+
+  const operators: ComparisonOperator[] = ['>', '<', '=', '>=', '<='];
 
   const parseExcelFile = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
@@ -87,13 +92,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     }
   };
 
-  const handleRoomsUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileUpload(file, setRoomsFileName, onRoomsLoaded, 'rooms');
-    }
-  };
-
   // 下載範例檔案
   const downloadSample = (type: string) => {
     const samplePath = `/scheduling_app/samples/sample_${type}.csv`;
@@ -119,15 +117,44 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         case 'interviewees':
           handleFileUpload(file, setIntervieweesFileName, onIntervieweesLoaded, 'interviewees');
           break;
-        case 'rooms':
-          handleFileUpload(file, setRoomsFileName, onRoomsLoaded, 'rooms');
-          break;
       }
     } catch (error) {
       console.error('Error loading sample:', error);
       alert(`Error loading sample ${type} file`);
     }
   };
+
+  const renderGroupRestriction = (groupId: string) => (
+    <div className="restriction-controls">
+      <div className="restriction-row">
+        <Form.Select
+          value={groupRestrictions[groupId].operator}
+          onChange={(e) => updateGroupRestriction(groupId, {
+            operator: e.target.value as ComparisonOperator,
+            count: groupRestrictions[groupId].count
+          })}
+          className="operator-select"
+        >
+          {operators.map(op => (
+            <option key={op} value={op}>{op}</option>
+          ))}
+        </Form.Select>
+        <Form.Control
+          type="number"
+          min="1"
+          value={groupRestrictions[groupId].count}
+          onChange={(e) => updateGroupRestriction(groupId, {
+            operator: groupRestrictions[groupId].operator,
+            count: parseInt(e.target.value) || 1
+          })}
+          className="count-input"
+        />
+        <span className="restriction-label">
+          {groupRestrictions[groupId].groupName.toLowerCase()} per session
+        </span>
+      </div>
+    </div>
+  );
 
   return (
     <Card className="mb-4 upload-card">
@@ -151,14 +178,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       <Card.Body>
         <Form className="w-100">
           <Row className="file-upload-row">
-            {['interviewers', 'interviewees', 'rooms'].map((type) => (
+            {['interviewers', 'interviewees'].map((type) => (
               <Col key={type} className="file-upload-col">
                 <Form.Group>
                   <div className="file-upload-header">
                     <Form.Label>
-                      {type === 'interviewers' ? '面試官檔案' : 
-                       type === 'interviewees' ? '應試者檔案' : 
-                       '會議室檔案'}
+                      {type === 'interviewers' ? '面試官檔案' : '應試者檔案'}
                     </Form.Label>
                     <div className="file-actions">
                       <Button
@@ -182,11 +207,10 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                   <Form.Control 
                     type="file" 
                     accept=".csv,.xlsx,.xls" 
-                    onChange={type === 'interviewers' ? handleInterviewersUpload : 
-                             type === 'interviewees' ? handleIntervieweesUpload : 
-                             handleRoomsUpload} 
+                    onChange={type === 'interviewers' ? handleInterviewersUpload : handleIntervieweesUpload} 
                     className="upload-input"
                   />
+                  {renderGroupRestriction(type)}
                 </Form.Group>
               </Col>
             ))}
@@ -201,11 +225,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             {intervieweesFileName && (
               <div className="preview-item">
                 <span className="text-success">✓ Interviewees: {intervieweesFileName}</span>
-              </div>
-            )}
-            {roomsFileName && (
-              <div className="preview-item">
-                <span className="text-success">✓ Rooms: {roomsFileName}</span>
               </div>
             )}
           </div>
