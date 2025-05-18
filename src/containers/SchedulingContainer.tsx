@@ -22,10 +22,6 @@ const SchedulingContainer: React.FC = () => {
         </Col>
       </Row>
       <Row>
-        <Col>
-          <AvailabilityCalendar/>
-        </Col>
-      </Row>
       {allDataLoaded && (
         <Row>
           <Col className="text-end">
@@ -38,6 +34,10 @@ const SchedulingContainer: React.FC = () => {
           </Col>
         </Row>
       )}
+        <Col>
+          <AvailabilityCalendar/>
+        </Col>
+      </Row>
       <Row>
         <Col>
           <ResultsDisplay />

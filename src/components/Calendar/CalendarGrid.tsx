@@ -142,57 +142,67 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
         };
     };
 
-    const renderTooltip = (date: Date, timeSlot: string) => (
-        <Tooltip className="availability-tooltip">
-            <div className="tooltip-content">
-                {scheduledInterviews.length > 0 ? (
-                    getTimeSlotInterviews(date, timeSlot).map((interview) => {
-                        const interviewKey = `${interview.intervieweeIds.join("-")}-${interview.startTime}`;
-                        const colorIndex = interviewColors.get(interviewKey) || 0;
+    const renderTooltip = (date: Date, timeSlot: string) => {
+        const targetInterview = getTimeSlotInterviews(date, timeSlot);
+        return scheduledInterviews.length > 0 && targetInterview.length == 0 ? (
+            <Tooltip >
+                <div key={`${date}-tooltip`} style={{ display: "none" }}></div>
+            </Tooltip>
+        ) : (
+            <Tooltip className="availability-tooltip">
+                <div className="tooltip-content">
+                    {scheduledInterviews.length > 0 ? (
+                        targetInterview.map((interview) => {
+                            const interviewKey = `${interview.intervieweeIds.join("-")}-${interview.startTime}`;
+                            const colorIndex = interviewColors.get(interviewKey) || 0;
 
-                        return (
-                            <div
-                                key={`${interview.intervieweeIds[0]}-${interview.startTime}`}
-                                className="interview-slot"
-                                style={{
-                                    borderLeft: `3px solid ${getInterviewColor(colorIndex)}`,
-                                    marginBottom: "8px",
-                                    padding: "8px",
-                                    backgroundColor: "#f8fafc",
-                                }}
-                            >
-                                <div className="interview-details">
-                                    <p>
-                                        <strong>面試官：</strong> {interview.interviewerNames.join(", ")}
-                                    </p>
+                            return (
+                                <div
+                                    key={`${interview.intervieweeIds[0]}-${interview.startTime}-${interview.isStart}`}
+                                    className="interview-slot"
+                                    style={{
+                                        borderLeft: `3px solid ${getInterviewColor(colorIndex)}`,
+                                        padding: "8px",
+                                        color: "#000",
+                                        // backgroundColor: "#f8fafc",
+                                    }}
+                                >
+                                    <div
+                                        key={`${interview.intervieweeIds[0]}-${interview.startTime}-interview-details`}
+                                        className="interview-details"
+                                    >
+                                        <p>
+                                            <strong>面試官：</strong> {interview.interviewerNames.join(", ")}
+                                        </p>
+                                    </div>
+                                    <div className="interview-details">
+                                        <p>
+                                            <strong>應試者：</strong> {interview.intervieweeNames.join(", ")}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="interview-details">
-                                    <p>
-                                        <strong>應試者：</strong> {interview.intervieweeNames.join(", ")}
-                                    </p>
-                                </div>
-                            </div>
-                        );
-                    })
-                ) : (
-                    <div>
-                        <p>
-                            <strong>面試官：</strong>{" "}
-                            {getAvailabilityData(date, timeSlot)
-                                .interviewers.map((i) => i.name)
-                                .join(", ") || "無"}
-                        </p>
-                        <p>
-                            <strong>應試者：</strong>{" "}
-                            {getAvailabilityData(date, timeSlot)
-                                .interviewees.map((i) => i.name)
-                                .join(", ") || "無"}
-                        </p>
-                    </div>
-                )}
-            </div>
-        </Tooltip>
-    );
+                            );
+                        })
+                    ) : (
+                        <div key={`${date}-tooltip`}>
+                            <p>
+                                <strong>面試官：</strong>{" "}
+                                {getAvailabilityData(date, timeSlot)
+                                    .interviewers.map((i) => i.name)
+                                    .join(", ") || "無"}
+                            </p>
+                            <p>
+                                <strong>應試者：</strong>{" "}
+                                {getAvailabilityData(date, timeSlot)
+                                    .interviewees.map((i) => i.name)
+                                    .join(", ") || "無"}
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </Tooltip>
+        );
+    };
 
     useLayoutEffect(() => {
         const root = document.documentElement;
