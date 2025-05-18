@@ -45,13 +45,21 @@ const TimeSlot: React.FC<TimeSlotProps> = ({
     return level === 3 ? 'high' : level === 2 ? 'medium' : level === 1 ? 'low' : '';
   };
 
+  // 只在格子內顯示顏色，不顯示詳細內容
+  // 如果有面試安排，則顯示特定的顏色標示
   const renderContent = () => {
     if (!showSchedule || interviews.length === 0) {
       return (
-        <>
+        <div style={{
+          display: 'grid', 
+          gridTemplateColumns: '1fr 1fr',
+          gap: '4px',
+          justifyContent: 'start',
+          width: '100%',
+        }}>
           {interviewers.length > 0 && <div>面試官: {interviewers.length}</div>}
-          {interviewees.length > 0 && <div>面試者: {interviewees.length}</div>}
-        </>
+          {interviewees.length > 0 && <div>應試者: {interviewees.length}</div>}
+        </div>
       );
     }
 

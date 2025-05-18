@@ -71,8 +71,7 @@ function runTests() {
       console.log(`面試 #${index + 1}：`);
       console.log(`- 時間：${new Date(interview.startTime).toLocaleString()} - ${new Date(interview.endTime).toLocaleString()}`);
       console.log(`- 面試官：${interview.interviewerNames.join(', ')}`);
-      console.log(`- 應試者：${interview.intervieweeNames.join(', ')}`);
-      console.log(`- 職位：${interview.position}\n`);
+      console.log(`- 應試者：${interview.intervieweeNames.join(', ')}\n`);
     });
 
     console.log('----------------------------------------\n');

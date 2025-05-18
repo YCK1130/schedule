@@ -105,8 +105,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 
   // 載入範例資料
   const loadSampleData = async (type: string) => {
+    const mapping: Map<string, string> = new Map([
+      ["interviewers", "INT"],
+      ["interviewees", "EE"]
+    ]);
     try {
-      const response = await fetch(`/scheduling_app/samples/sample_${type}.csv`);
+      console.log(`/scheduling_app/samples/csv/${mapping.get(type)}/10.csv`)
+      const response = await fetch(`/scheduling_app/samples/csv/${mapping.get(type)}/10.csv`);
+      // const response = await fetch(`/scheduling_app/samples/sample_${type}.csv`);
       const blob = await response.blob();
       const file = new File([blob], `sample_${type}.csv`, { type: 'text/csv' });
 

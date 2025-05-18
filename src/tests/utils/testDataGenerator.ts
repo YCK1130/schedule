@@ -58,9 +58,7 @@ export function generateInterviewers(count: number, options: GeneratorOptions = 
     name: `面試官 ${i + 1}`,
     email: `interviewer${i + 1}@example.com`,
     specialization: specializations[i % specializations.length],
-    availability: timeSlots
-      .filter(() => Math.random() > 0.3) // 隨機選擇 70% 的時段作為可用時段
-      .join(',')
+    availability: timeSlots.filter(() => Math.random() > 0.3) // 隨機選擇 70% 的時段作為可用時段
   }));
 }
 
@@ -73,9 +71,7 @@ export function generateInterviewees(count: number, options: GeneratorOptions = 
     name: `應試者 ${i + 1}`,
     email: `interviewee${i + 1}@example.com`,
     positionApplied: positions[i % positions.length],
-    availability: timeSlots
-      .filter(() => Math.random() > 0.5) // 隨機選擇 50% 的時段作為可用時段
-      .join(',')
+    availability: timeSlots.filter(() => Math.random() > 0.5) // 隨機選擇 50% 的時段作為可用時段
   }));
 }
 
@@ -114,14 +110,14 @@ export function generateTestScenarios() {
         availability: generateTimeSlots({
           startDate: new Date(`2025-05-2${i}T09:00:00`),
           endDate: new Date(`2025-05-2${i}T17:00:00`)
-        }).join(',')
+        })
       })),
       interviewees: generateInterviewees(3).map((interviewee, i) => ({
         ...interviewee,
         availability: generateTimeSlots({
           startDate: new Date(`2025-05-2${i}T09:00:00`),
           endDate: new Date(`2025-05-2${i}T17:00:00`)
-        }).join(',')
+        })
       }))
     }
   };

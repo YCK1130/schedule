@@ -36,7 +36,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ scheduledInterviews }) => {
         <p><strong>面試者：</strong> {interview.intervieweeNames.join(", ")}</p>
         <p><strong>面試官：</strong> {interview.interviewerNames.join(", ")}</p>
         <p><strong>時間：</strong> {new Date(interview.startTime).toLocaleTimeString()}</p>
-        <p><strong>職位：</strong> {interview.position}</p>
       </div>
     </Tooltip>
   );

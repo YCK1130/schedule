@@ -6,10 +6,10 @@ interface CalendarLegendProps {
 
 const CalendarLegend: React.FC<CalendarLegendProps> = ({ isScheduleView = false }) => {
   const availabilityLegendItems = [
-    { level: 0, text: '無人可用' },
-    { level: 1, text: '部分可用 (至少一方)' },
-    { level: 2, text: '多方可用 (兩方)' },
-    { level: 3, text: '完全可用 (三方皆可)' },
+    { level: 0, text: '未排程' },
+    // { level: 1, text: '部分可用 (至少一方)' },
+    // { level: 2, text: '多方可用 (兩方)' },
+    // { level: 3, text: '完全可用 (三方皆可)' },
   ];
 
   const scheduleLegendItems = [
@@ -28,13 +28,13 @@ const CalendarLegend: React.FC<CalendarLegendProps> = ({ isScheduleView = false 
           <span className="legend-text">{item.text}</span>
         </div>
       ))}
-      <div className="legend-note">
+      {/* <div className="legend-note">
         {isScheduleView ? (
           '提示：點擊時段查看詳細面試資訊'
         ) : (
           '數字代表：面試官/應試者/會議室'
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

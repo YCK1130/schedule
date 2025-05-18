@@ -34,7 +34,11 @@ interface SchedulingContextType {
   groupRestrictions: {
     [key: string]: GroupRestriction;
   };
+  maxCounts: {
+    [key: string]: number;
+  };
   updateGroupRestriction: (groupId: string, restriction: Omit<GroupRestriction, 'groupName'>) => void;
+  updateMaxCount: (groupId: string, count: number) => void;
   setInterviewers: (data: Interviewer[]) => void;
   setInterviewees: (data: Interviewee[]) => void;
   generateSchedule: () => void;
@@ -65,9 +69,16 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     },
     interviewees: {
       operator: '=',
-      count: 1,
+      count: 2,
       groupName: 'Interviewees'
     }
+  });
+  
+  const [maxCounts, setMaxCounts] = useState<{
+    [key: string]: number;
+  }>({
+    interviewers: 1,
+    interviewees: 2
   });
 
   const dataLoaded = {
@@ -79,10 +90,11 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     console.log('開始配對程序', {
       interviewers: interviewers.length,
       interviewees: interviewees.length,
-      groupRestrictions
+      groupRestrictions,
+      maxCounts
     });
     
-    const result = scheduleInterviews(interviewers, interviewees, groupRestrictions);
+    const result = scheduleInterviews(interviewers, interviewees, groupRestrictions, maxCounts);
     console.log('配對結果：', result);
     
     setScheduledInterviews(result.interviews);
@@ -91,8 +103,8 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const { startDate, daysToShow, earliestTime, latestTime } = useMemo(() => {
       const allAvailabilities = [
-        ...interviewers.flatMap(i => i.availability.split(',') || []),
-        ...interviewees.flatMap(i => i.availability.split(',') || []),
+        ...interviewers.flatMap(i => i.availability || []),
+        ...interviewees.flatMap(i => i.availability || []),
       ].filter(Boolean);
       
       if (allAvailabilities.length === 0) {
@@ -147,13 +159,60 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           latestTime
         },
         groupRestrictions,
+        maxCounts,
         setInterviewers: (data) => {
-          console.log('設置面試官資料：', data);
-          setInterviewers(data);
+        //   console.log('設置面試官資料：', data);
+          // 確保每個面試官的 availability 都是數組
+          const processedData = data.map(interviewer => {
+            // 如果 availability 不存在或不是數組，則初始化為空數組
+            if (!interviewer.availability || !Array.isArray(interviewer.availability)) {
+            //   console.warn(`修正面試官 ${interviewer.name} 的 availability 格式`, interviewer.availability);
+              
+              // 如果 availability 是字符串，嘗試解析成數組
+              if (typeof interviewer.availability === 'string') {
+                return {
+                  ...interviewer,
+                  availability: interviewer.availability.split(',').map(slot => slot.trim()).filter(slot => slot.includes('/'))
+                };
+              }
+              
+              // 其他情況，設為空數組
+              return {
+                ...interviewer,
+                availability: []
+              };
+            }
+            return interviewer;
+          });
+          
+          setInterviewers(processedData);
         },
         setInterviewees: (data) => {
-          console.log('設置面試者資料：', data);
-          setInterviewees(data);
+        //   console.log('設置面試者資料：', data);
+          // 確保每個面試者的 availability 都是數組
+          const processedData = data.map(interviewee => {
+            // 如果 availability 不存在或不是數組，則初始化為空數組
+            if (!interviewee.availability || !Array.isArray(interviewee.availability)) {
+            //   console.warn(`修正面試者 ${interviewee.name} 的 availability 格式`, interviewee.availability);
+              
+              // 如果 availability 是字符串，嘗試解析成數組
+              if (typeof interviewee.availability === 'string') {
+                return {
+                  ...interviewee,
+                  availability: interviewee.availability.split(',').map(slot => slot.trim()).filter(slot => slot.includes('/'))
+                };
+              }
+              
+              // 其他情況，設為空數組
+              return {
+                ...interviewee,
+                availability: []
+              };
+            }
+            return interviewee;
+          });
+          
+          setInterviewees(processedData);
         },
         updateGroupRestriction: (groupId, restriction) => {
           console.log(`更新 ${groupId} 群組限制：`, restriction);
@@ -163,6 +222,13 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               ...prev[groupId],
               ...restriction
             }
+          }));
+        },
+        updateMaxCount: (groupId, count) => {
+          console.log(`更新 ${groupId} 最大限制：`, count);
+          setMaxCounts(prev => ({
+            ...prev,
+            [groupId]: count
           }));
         },
         generateSchedule,

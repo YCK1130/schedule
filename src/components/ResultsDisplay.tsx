@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
 import React from 'react';
-import { Alert, Button, Card, Table } from 'react-bootstrap';
+import { Alert, Button, Card, Col, Row, Table } from 'react-bootstrap';
 import { useScheduling } from '../contexts/SchedulingContext';
 
 export const ResultsDisplay: React.FC = () => {
@@ -40,9 +40,9 @@ export const ResultsDisplay: React.FC = () => {
         </Card.Header>
         <Card.Body>
           {scheduledInterviews.length === 0 ? (
-            <p className="text-center text-muted">
+            <Alert variant="info">
               尚未安排任何面試。
-            </p>
+            </Alert>
           ) : (
             <Table striped bordered hover responsive>
               <thead>
@@ -51,7 +51,6 @@ export const ResultsDisplay: React.FC = () => {
                   <th>面試官</th>
                   <th>開始時間</th>
                   <th>結束時間</th>
-                  <th>應徵職位</th>
                 </tr>
               </thead>
               <tbody>
@@ -61,7 +60,6 @@ export const ResultsDisplay: React.FC = () => {
                     <td>{interview.interviewerNames.join(', ')}</td>
                     <td>{formatDate(interview.startTime)}</td>
                     <td>{formatDate(interview.endTime)}</td>
-                    <td>{interview.position}</td>
                   </tr>
                 ))}
               </tbody>
@@ -70,37 +68,58 @@ export const ResultsDisplay: React.FC = () => {
         </Card.Body>
       </Card>
 
-      {unmatchedResults && (unmatchedResults.interviewees.length > 0 || unmatchedResults.interviewers.length > 0) && (
-        <Alert variant="warning" className="mt-3">
-          <Alert.Heading>未能完全配對</Alert.Heading>
-          <div className="mt-3">
-            {unmatchedResults.reasons.map((reason, index) => (
-              <p key={index} className="mb-1 text-danger">
-                ⚠️ {reason}
-              </p>
-            ))}
-          </div>
-          {unmatchedResults.interviewees.length > 0 && (
-            <div className="mt-3">
-              <h6>未配對面試者：</h6>
-              <ul className="text-danger">
-                {unmatchedResults.interviewees.map(interviewee => (
-                  <li key={interviewee.id}>{interviewee.name} ({interviewee.positionApplied})</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {unmatchedResults.interviewers.length > 0 && (
-            <div className="mt-3">
-              <h6>未配對面試官：</h6>
-              <ul className="text-danger">
-                {unmatchedResults.interviewers.map(interviewer => (
-                  <li key={interviewer.id}>{interviewer.name} ({interviewer.specialization})</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </Alert>
+      {unmatchedResults && (unmatchedResults.interviewers.length > 0 || unmatchedResults.interviewees.length > 0) && (
+        <Card className="mb-4" border="danger">
+          <Card.Header className="bg-danger text-white">
+            <h5 className="mb-0">未配對名單</h5>
+          </Card.Header>
+          <Card.Body>
+            <Row>
+              <Col md={6}>
+                {unmatchedResults.interviewees.length > 0 && (
+                  <div>
+                    <h6 className="text-danger">未配對面試者：</h6>
+                    <Table striped bordered hover size="sm" className="border-danger">
+                      <thead>
+                        <tr>
+                          <th>姓名</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {unmatchedResults.interviewees.map(interviewee => (
+                          <tr key={interviewee.id} className="text-danger">
+                            <td>{interviewee.name}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                )}
+              </Col>
+              <Col md={6}>
+                {unmatchedResults.interviewers.length > 0 && (
+                  <div>
+                    <h6 className="text-danger">未配對面試官：</h6>
+                    <Table striped bordered hover size="sm" className="border-danger">
+                      <thead>
+                        <tr>
+                          <th>姓名</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {unmatchedResults.interviewers.map(interviewer => (
+                          <tr key={interviewer.id} className="text-danger">
+                            <td>{interviewer.name}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                )}
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
       )}
     </>
   );
