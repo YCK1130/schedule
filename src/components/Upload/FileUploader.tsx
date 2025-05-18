@@ -182,7 +182,7 @@ const FileUploader: React.FC = () => {
             }));
         }
     }, [interviewers, interviewees]);
-    console.log(positions, interviewees);
+    
     const renderGroupRestriction = (groupId: string) => (
         <div className="restrictions-container">
             <span className="restriction-label">{groupId === "interviewers" ? "面試官" : "應試者"} 條件限制</span>

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 import type { Interviewee, Interviewer, ScheduledInterview } from "../types";
-import { scheduleInterviews } from "../utils/schedulerUtils";
+import { scheduleInterviews } from "../utils/algos/schedule";
 
 export type ComparisonOperator = ">" | "<" | "=" | ">=" | "<=";
 
@@ -43,8 +43,6 @@ interface SchedulingContextType {
     removeRestriction: (groupId: string, index: number) => void;
     updateAllRestrictions: (groupId: string, restrictions: GroupRestriction[]) => void;
     updateGroupRestriction: (groupId: string, restrictionIndex: number, restriction: Partial<GroupRestriction>) => void;
-    //   setInterviewers: (data: Interviewer[]) => void;
-    //   setInterviewees: (data: Interviewee[]) => void;
     onInterviewersLoaded: (data: Interviewer[]) => void;
     onIntervieweesLoaded: (data: Interviewee[]) => void;
     generateSchedule: () => void;
@@ -108,7 +106,7 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             maxCounts,
         });
 
-        const result = scheduleInterviews(interviewers, interviewees, groupRestrictions, maxCounts);
+        const result = scheduleInterviews(interviewers, interviewees, groupRestrictions);
         console.log("配對結果：", result);
 
         setScheduledInterviews(result.interviews);
