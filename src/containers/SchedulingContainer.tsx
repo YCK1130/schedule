@@ -9,8 +9,6 @@ const SchedulingContainer: React.FC = () => {
   const { 
     dataLoaded, 
     scheduledInterviews,
-    setInterviewers,
-    setInterviewees,
     generateSchedule
   } = useScheduling();
 
@@ -20,10 +18,7 @@ const SchedulingContainer: React.FC = () => {
     <Container className="py-2">
       <Row>
         <Col>
-          <FileUploader
-            onInterviewersLoaded={setInterviewers}
-            onIntervieweesLoaded={setInterviewees}
-          />
+          <FileUploader />
         </Col>
       </Row>
       <Row>
