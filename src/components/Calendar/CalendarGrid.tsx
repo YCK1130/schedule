@@ -146,7 +146,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                 }
                 return interviewee.availability.some((slot) => isTimeInSlot(checkDate, slot));
             }) || [];
-        // console.log(checkDate, "可用的面試官:", availableInterviewers);
         return {
             interviews: [],
             interviewers: availableInterviewers,

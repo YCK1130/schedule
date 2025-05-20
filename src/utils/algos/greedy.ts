@@ -18,7 +18,6 @@ export const optimizedGreedyMatching = (
     const validInterviewees = interviewees.filter((interviewee) => interviewee.availability.length > 0);
     // 如果沒有有效的面試官或應試者，直接返回
     if (validInterviewers.length === 0 || validInterviewees.length === 0) {
-        console.log("沒有有效的面試官或應試者");
         // 將所有無效的面試官和應試者標記為未匹配
         interviewers
             .filter((i) => !i.availability || i.availability.length === 0)
@@ -40,7 +39,6 @@ export const optimizedGreedyMatching = (
 
     // 收集所有可能的時間段
     const allTimeSlots = getAllTimeSlots(interviewers, interviewees);
-    console.log(`共有 ${allTimeSlots.length} 個可能的時間段`);
 
     // 按時間順序排序時間段
     allTimeSlots.sort((a, b) => {
@@ -61,11 +59,9 @@ export const optimizedGreedyMatching = (
         }
         intervieweesByPosition[position].push(interviewee);
     });
-    console.log(intervieweesByPosition);
 
     // 為每個職位組的應試者分配面試時間
     for (const position in intervieweesByPosition) {
-        console.log(`開始為職位 "${position}" 的應試者安排面試...`);
 
         // 開始為每個時間段分配面試
         for (const timeSlot of allTimeSlots) {
@@ -77,21 +73,16 @@ export const optimizedGreedyMatching = (
                     // !unmatched.interviewees.includes(interviewee) &&
                     !assignedIntervieweeIds.has(interviewee.id)
             );
-            console.log(`時段：${timeSlot}`);
-            console.log(`assignedIntervieweeIds:`, assignedIntervieweeIds);
 
             // 如果沒有可用的應試者，跳過這個時間段
             if (availableInterviewees.length === 0) continue;
 
             // 尋找這個時間段可用的面試官
             const availableInterviewers = validInterviewers.filter((interviewer) => isTimeSlotAvailable(interviewer, timeSlot, interviews));
-            console.log(`可用的面試官: ${availableInterviewers.map((i) => i.name).join(", ")}`);
-            console.log(`可用的應試者: ${availableInterviewees.map((i) => i.name).join(", ")}`);
 
             const result = checkRestrictions(groupRestrictions, availableInterviewers, availableInterviewees, interviews);
 
             if (!result.valid) {
-                console.log(`時段 ${timeSlot} 不符合限制條件: ${result.reason}`);
                 unmatched.reasons.push(result.reason);
                 continue;
             }
@@ -116,19 +107,12 @@ export const optimizedGreedyMatching = (
                 }
             });
 
-            console.log(
-                `安排了面試: ${result.interviewees.map((i) => i.name).join(", ")} (${position}) 與 ${result.interviewers
-                    .map((i) => i.name)
-                    .join(", ")} 在 ${startTime}`
-            );
         }
     }
     // 填滿可以填滿的 interviews
     for (const inter of interviews) {
         const ints = inter.interviewers.map((i) => i.id);
         // 尋找這個時間段可用的應試者（同一職位且尚未分配）
-        console.log("重填中...");
-        console.log(`時段：${inter.startTime}/${inter.endTime}`);
 
         const availableInters = validInterviewers.filter(
             (interviewer) => isTimeSlotAvailable(interviewer, `${inter.startTime}/${inter.endTime}`, interviews) && !ints.includes(interviewer.id)
@@ -142,11 +126,9 @@ export const optimizedGreedyMatching = (
         const { max } = groupRestrictions.get("interviewers:所有") || { min: 1, max: 100 };
         const numTargets = sortedInters.filter((interviewer) => !existPosition.includes(`${interviewer.position}`));
         const interviewersCount = Math.min(numTargets.length + ints.length, max) - ints.length;
-        console.log(`可用的面試官數量: ${interviewersCount}, ${existPosition} ${numTargets.map((i) => i.position).join(", ")}`);
         if (interviewersCount > 0) {
             const selectedInters = sortedInters.slice(0, interviewersCount);
             inter.interviewers.push(...selectedInters.map((i) => ({ id: i.id, name: i.name, position: i.position })));
-            console.log(`新增安排了面試官: ${selectedInters.map((i) => i.name).join(", ")} 在 ${inter.startTime}`);
         }
     }
 

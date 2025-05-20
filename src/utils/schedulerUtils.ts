@@ -17,8 +17,6 @@ const MAX_NUMBER = 1000000;
 export const getRestrictionRange = (restrictions: GroupRestriction[], position: string = "所有"): { min: number; max: number; conflict: boolean } => {
     // 尋找匹配職位的限制條件
     const matchedRestrictions = restrictions.filter((r) => r.targetPosition === position);
-    console.log("restrictions:", restrictions, "position:", position);
-    console.log("matchedRestrictions:", matchedRestrictions);
     let min = 1;
     let max = MAX_NUMBER;
     if (matchedRestrictions.length === 0) {
@@ -42,7 +40,6 @@ export const checkConflict = (restrictions: {
 }): { valid: boolean; reason: string; conflict: boolean; results: Map<string, { min: number; max: number }> } => {
     const tagetSet = new Map<string, { min: number; max: number }>();
     let reasonString = "";
-    console.log("檢查衝突的限制條件:", restrictions);
     for (const key in restrictions) {
         const group = restrictions[key];
         for (const item of group) {
@@ -57,8 +54,6 @@ export const checkConflict = (restrictions: {
             }
         }
     }
-    console.log("檢查衝突:", reasonString);
-    console.log("檢查結果:", tagetSet);
     if (reasonString.length === 0) return { valid: true, reason: "無衝突", conflict: false, results: tagetSet };
     reasonString = reasonString.slice(2);
     return { valid: false, reason: reasonString, conflict: true, results: {} as Map<string, { min: number; max: number }> };
@@ -87,15 +82,12 @@ export const checkRestrictions = (
     const validInterviewersMap = new Map<string, Interviewer[]>();
     const validIntervieweesMap = new Map<string, Interviewee[]>();
     restrictions = new Map<string, { min: number; max: number }>(restrictions);
-    console.log("restriction:", restrictions);
     let shouldInterviewersNumber = interviewers.length;
     let shouldIntervieweesNumber = interviewees.length;
     if (!restrictions.has("interviewers:所有")) {
-        console.log("沒有 interviewers:所有 的限制條件", new Map<string, { min: number; max: number }>(restrictions));
         restrictions.set("interviewers:所有", { min: 1, max: MAX_NUMBER });
     }
     if (!restrictions.has("interviewees:所有")) {
-        console.log("沒有 interviewees:所有 的限制條件", new Map<string, { min: number; max: number }>(restrictions));
         restrictions.set("interviewees:所有", { min: 1, max: MAX_NUMBER });
     }
     let fail = false;
@@ -104,7 +96,6 @@ export const checkRestrictions = (
         if (fail) return;
         const [group, position] = key.split(":");
         const { min, max } = value;
-        console.log(group, position, min, max);
         if (group === "interviewers") {
             const numTargets = sortedInterviewers.filter((interviewer) => interviewer.position === position || position === "所有");
             const interviewersCount = Math.min(numTargets.length, max);
@@ -146,15 +137,11 @@ export const checkRestrictions = (
         }
     });
     if (fail) {
-        console.log("檢查限制條件失敗:", failResult);
         return failResult;
     }
-    console.log("validInterviewersMap:", validInterviewersMap);
     const interviewersResults = [...validInterviewersMap.entries()].reduce((acc, cur) => [...acc, ...cur[1]], [] as Interviewer[]);
     const intervieweesResults = [...validIntervieweesMap.entries()].reduce((acc, cur) => [...acc, ...cur[1]], [] as Interviewee[]);
     let count = 0;
-    console.log("shouldInterviewersNumber:", shouldInterviewersNumber);
-    console.log("shouldIntervieweesNumber:", shouldIntervieweesNumber);
     while (interviewersResults.length < shouldInterviewersNumber) {
         if (count >= interviewers.length) {
             return { valid: false, reason: `面試官數量不合`, interviewers: [] as Interviewer[], interviewees: [] as Interviewee[] };

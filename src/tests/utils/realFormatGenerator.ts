@@ -84,7 +84,6 @@ function generateInterviewees(count: number): IntervieweeData[] {
 function saveToCSV(data: any[], filename: string): void {
     const csv = Papa.unparse(data);
     writeFileSync(filename, csv);
-    console.log(`成功生成檔案: ${filename}`);
 }
 
 /**
@@ -102,7 +101,6 @@ function saveToExcel(interviewers: InterviewerData[], interviewees: IntervieweeD
     XLSX.utils.book_append_sheet(wb, wsInterviewees, "面試者時間");
     
     XLSX.writeFile(wb, filename);
-    console.log(`成功生成檔案: ${filename}`);
 }
 
 /**
@@ -175,7 +173,6 @@ function printHelp() {
  */
 function main() {
     const options = parseArgs();
-    console.log(`正在生成測試數據：${options.interviewersCount}位幹部，${options.intervieweesCount}位面試者`);
     
     // 確保輸出目錄存在
     if (!existsSync(options.outputDir)) {

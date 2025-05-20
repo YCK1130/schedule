@@ -105,20 +105,13 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
 
     const generateSchedule = () => {
-        console.log("開始配對程序", {
-            interviewers: interviewers.length,
-            interviewees: interviewees.length,
-            groupRestrictions,
-            maxCounts,
-        });
+        
         const checkResult = checkConflict(groupRestrictions);
         if (!checkResult.results && checkResult.conflict){
             console.error("群組限制檢查失敗：", checkResult.conflict);
             return;
         }
-        console.log("群組限制檢查結果：", checkResult.results);
         const result = scheduleInterviews(interviewers, interviewees, checkResult.results);
-        console.log("配對結果：", result);
 
         setScheduledInterviews(result.interviews);
         setUnmatchedResults(result.unmatched);
@@ -169,13 +162,8 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }, [interviewers, interviewees]);
 
     const onIntervieweesLoaded = (data: Interviewee[]) => {
-        console.log("面試者資料已加載：", data);
         const processedData = data.map((interviewee) => {
-            // 如果 availability 不存在或不是數組，則初始化為空數組
             if (!interviewee.availability || !Array.isArray(interviewee.availability)) {
-                //   console.warn(`修正面試者 ${interviewee.name} 的 availability 格式`, interviewee.availability);
-
-                // 如果 availability 是字符串，嘗試解析成數組
                 if (typeof interviewee.availability === "string") {
                     return {
                         ...interviewee,
@@ -185,8 +173,6 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                             .filter((slot) => slot.includes("/")),
                     };
                 }
-
-                // 其他情況，設為空數組
                 return {
                     ...interviewee,
                     availability: [],
@@ -197,15 +183,9 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setInterviewees(processedData);
     };
     const onInterviewersLoaded = (data: Interviewer[]) => {
-        console.log("面試者資料已加載：", data);
-        // 確保每個面試者的 availability 都是數組
 
         const processedData = data.map((interviewer) => {
-            // 如果 availability 不存在或不是數組，則初始化為空數組
             if (!interviewer.availability || !Array.isArray(interviewer.availability)) {
-                //   console.warn(`修正面試官 ${interviewer.name} 的 availability 格式`, interviewer.availability);
-
-                // 如果 availability 是字符串，嘗試解析成數組
                 if (typeof interviewer.availability === "string") {
                     return {
                         ...interviewer,
@@ -216,7 +196,6 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     };
                 }
 
-                // 其他情況，設為空數組
                 return {
                     ...interviewer,
                     availability: [],
@@ -228,11 +207,8 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setInterviewers(processedData);
     };
     const updateGroupRestriction = (groupId: string, restrictionIndex: number, restriction: Partial<GroupRestriction>) => {
-        console.log(`更新 ${groupId} 群組限制 ${restrictionIndex}：`, restriction);
         setGroupRestrictions((prev) => {
-                console.log(`更新 ${groupId} 群組限制 ${prev[groupId]}`);
                 const updatedRestrictions = prev[groupId].map((r, i) => {
-                console.log(`更新 ${groupId} 群組限制 ${restrictionIndex}：`, r, i);
                 
                 if (i === restrictionIndex) {
                     return { ...r, ...restriction };
@@ -266,14 +242,12 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 onInterviewersLoaded,
                 onIntervieweesLoaded,
                 updateMaxCount: (groupId, count) => {
-                    console.log(`更新 ${groupId} 最大限制：`, count);
                     setMaxCounts((prev) => ({
                         ...prev,
                         [groupId]: count,
                     }));
                 },
                 addRestriction: (groupId) => {
-                    console.log(`增加 ${groupId} 群組限制`);
                     setGroupRestrictions((prev) => {
                         const newRestriction: GroupRestriction = {
                             minCount: 1,
@@ -288,16 +262,11 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     });
                 },
                 removeRestriction: (groupId, index) => {
-                    console.log(`移除 ${groupId} 群組限制 ${index}`);
-                    // 至少保留一個限制條件
                     setGroupRestrictions((prev) => {
                         if (prev[groupId].length <= 1) {
                             return prev;
                         }
-                        console.log(`更新 ${groupId} 群組限制：`, prev);
-
                         const updatedRestrictions = prev[groupId].filter((_, i) => i !== index);
-                        console.log(`更新 ${groupId} 群組限制：`, updatedRestrictions);
                         return {
                             ...prev,
                             [groupId]: updatedRestrictions,

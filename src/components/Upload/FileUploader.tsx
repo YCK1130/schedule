@@ -195,9 +195,7 @@ const FileUploader: React.FC = () => {
             ["interviewees", "/schedule/samples/real/interview_schedule_interviewees.csv"],
         ]);
         try {
-            // console.log(`/schedule/samples/csv/${mapping.get(type)}/100.csv`);
             const response = await fetch(`${mapping.get(type)}`);
-            // const response = await fetch(`/schedule/samples/sample_${type}.csv`);
             const blob = await response.blob();
             const file = new File([blob], `sample_${type}.csv`, { type: "text/csv" });
 

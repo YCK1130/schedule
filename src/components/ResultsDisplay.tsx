@@ -119,12 +119,8 @@ export const ResultsDisplay: React.FC = () => {
                           console.error("Invalid data type for time, date, or id", { time, date, id });
                         }
                     })
-                    console.log("acc", acc);
-                    console.log("timeMap", timeMap);
                     return acc;
                 }, [] as { name: string; position: string; date: string; time: string; id: number }[]);
-                console.log("flatData", flatData);
-                console.log("interviewersData", interviewersData);
                 csvContent = Papa.unparse(
                     flatData
                         .map((r) => ({
