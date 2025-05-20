@@ -17,9 +17,7 @@ const SchedulingContainer: React.FC = () => {
   return (
     <Container className="py-2">
       <Row>
-        <Col>
           <FileUploader />
-        </Col>
       </Row>
       <Row>
       {allDataLoaded && (

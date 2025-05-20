@@ -55,8 +55,8 @@ const TimeSlot: React.FC<TimeSlotProps> = ({ availability, showSchedule = false 
                             width: "100%",
                         }}
                     >
-                        {interviewers.length > 0 && <div>面試官: {interviewers.length}</div>}
-                        {interviewees.length > 0 && <div>應試者: {interviewees.length}</div>}
+                        {interviewers.length > 0 && <div style={{color: "#4E6688"}}>面試官: {interviewers.length}</div>}
+                        {interviewees.length > 0 && <div style={{color: "#DDA853"}}>應試者: {interviewees.length}</div>}
                     </div>
                 </div>
             );
