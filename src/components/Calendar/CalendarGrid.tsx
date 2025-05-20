@@ -186,6 +186,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                             color: "#000",
                                         }}
                                     >
+                                        <span className="interview-time">面試編號：{interview.id}</span>
                                         <div
                                             key={`${interview.interviewees.map(idx=>idx.id)[0]}-${interview.startTime}-interview-details`}
                                             className="interview-details"
@@ -193,11 +194,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                             <p>
                                                 <strong>面試官：</strong> 
                                                 {interview.interviewers.map((inter, i) => {
-                                                    // 獲取面試官的 ID
-                                                    // const interviewerId = interview.interviewers.map(idx=>idx.id)[i];
-                                                    // // 嘗試找到對應的面試官
-                                                    // const interviewer = interviewers.find(i => i.id === interviewerId);
-                                                    // 獲取職位的最後一個字元
                                                     const positionChar = inter?.position ? 
                                                     inter.position.charAt(0) : 'N/A';
                                                     
@@ -213,11 +209,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                             <p>
                                                 <strong>應試者：</strong> 
                                                 {interview.interviewees.map((ee, i) => {
-                                                    // 獲取應試者的 ID
-                                                    // const intervieweeId = interview.interviewees.map(idx=>idx.id)[i];
-                                                    // 嘗試找到對應的應試者
-                                                    // const interviewee = interviewees.find(i => i.id === intervieweeId);
-                                                    // 獲取職位的最後一個字元
                                                     const positionChar = ee?.position ? 
                                                     ee.position.charAt(0) : 'N/A';
                                                     

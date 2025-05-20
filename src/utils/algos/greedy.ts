@@ -171,7 +171,7 @@ export const optimizedGreedyMatching = (
     //     }
     // });
     return {
-        interviews,
+        interviews: interviews.map((interview, id) => ({ ...interview, id: id + 1 })),
         unmatched: {
             interviewers: validInterviewers, // 因為沒有面試官沒有次數限制，且前面已經剔除他的已用時間，我們顯示所有面試官剩下的時間
             interviewees: unmatchedInterviewees,
