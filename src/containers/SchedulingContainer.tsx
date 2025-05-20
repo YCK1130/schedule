@@ -13,7 +13,7 @@ const SchedulingContainer: React.FC = () => {
     return (
         <Container className="py-2">
             <Row>
-                <Col className="text-end" style={{ display: "flex", justifyContent: "center" }}>
+                <Col style={{ display: "flex", justifyContent: "center" }}>
                     <FileUploader />
                 </Col>
             </Row>

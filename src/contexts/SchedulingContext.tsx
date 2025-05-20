@@ -84,7 +84,7 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         ],
         interviewees: [
             {
-                minCount: 1,
+                minCount: 3,
                 maxCount: 3,
                 targetPosition: "所有",
                 groupName: "Interviewees",

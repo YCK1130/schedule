@@ -3,6 +3,7 @@ import Papa from "papaparse";
 import React from "react";
 import { Alert, Card, Col, Dropdown, Row, Table } from "react-bootstrap";
 import { useScheduling } from "../contexts/SchedulingContext";
+import type { Interviewee } from "../types";
 
 export const ResultsDisplay: React.FC = () => {
     const { scheduledInterviews, unmatchedResults, interviewers, interviewees } = useScheduling();
@@ -64,6 +65,7 @@ export const ResultsDisplay: React.FC = () => {
                 position: participant.position || "",
                 email: participant.email || "",
                 timeMap: timeMap,
+                origin_availability: participant.origin_availability,
                 // interviewTimes: timeSlots.join(", "),
             };
         });
@@ -116,9 +118,9 @@ export const ResultsDisplay: React.FC = () => {
                         if (typeof time === "string" && typeof date === "string" && typeof id === "number") {
                             acc.push({ name, position, date, time, id });
                         } else {
-                          console.error("Invalid data type for time, date, or id", { time, date, id });
+                            console.error("Invalid data type for time, date, or id", { time, date, id });
                         }
-                    })
+                    });
                     return acc;
                 }, [] as { name: string; position: string; date: string; time: string; id: number }[]);
                 csvContent = Papa.unparse(
@@ -143,10 +145,10 @@ export const ResultsDisplay: React.FC = () => {
                         .map((r) => ({
                             姓名: r.name,
                             職位: r.position,
-                            Email: r.email,
                             日期: r.timeMap.get("date"),
                             面試時間: r.timeMap.get("time"),
-                            面試編號: r.timeMap.get("id"),
+                            面試場次編號: r.timeMap.get("id"),
+                            可面試時間: r.origin_availability,
                         }))
                         .sort((a, b) => a.姓名.localeCompare(b.姓名))
                 );
@@ -174,7 +176,27 @@ export const ResultsDisplay: React.FC = () => {
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
         saveAs(blob, fileName);
     };
-
+    const getAvalTime = (interviewee: Interviewee) => {
+        if (interviewee.origin_availability) {
+            if (Array.isArray(interviewee.origin_availability)) {
+                return interviewee.origin_availability
+                    .map((slot) => {
+                        const { date, time } = formatTimeRange(slot.split("/")[0], slot.split("/")[1]);
+                        return `${date} ${time}`;
+                    })
+                    .join(", ");
+            } else {
+                return interviewee.origin_availability;
+            }
+        } else if (Array.isArray(interviewee.availability)) {
+            return interviewee.availability
+                .map((slot) => {
+                    const { date, time } = formatTimeRange(slot.split("/")[0], slot.split("/")[1]);
+                    return `${date} ${time}`;
+                })
+                .join(", ");
+        } else return interviewee.availability;
+    };
     return (
         <>
             <Card className="mb-4">
@@ -226,19 +248,19 @@ export const ResultsDisplay: React.FC = () => {
                         <Table striped bordered hover responsive>
                             <thead>
                                 <tr>
-                                    <th>日期</th>
-                                    <th>時間</th>
-                                    <th>面試編號</th>
-                                    <th>面試者</th>
-                                    <th>面試官</th>
+                                    <th style={{textAlign:"center",width:"3.5em", textWrap:"balance"}}>編號</th>
+                                    <th style={{textAlign:"center",width:"3em"}}>日期</th>
+                                    <th style={{textAlign:"center",width:"8em"}}>時間</th>
+                                    <th style={{textAlign:"center"}}>面試者</th>
+                                    <th style={{textAlign:"center"}}>面試官</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {scheduledInterviews.map((interview) => (
                                     <tr key={`${interview.interviewees[0].id}-${interview.startTime}`}>
-                                        <td>{formatTimeRange(interview.startTime, interview.endTime).date}</td>
-                                        <td>{formatTimeRange(interview.startTime, interview.endTime).time}</td>
-                                        <td>{interview.id}</td>
+                                        <td style={{textAlign:"center",width:"3.5em"}}>{interview.id}</td>
+                                        <td style={{textAlign:"center",width:"3em"}}>{formatTimeRange(interview.startTime, interview.endTime).date}</td>
+                                        <td style={{textAlign:"center",width:"8em"}}>{formatTimeRange(interview.startTime, interview.endTime).time}</td>
                                         <td>{interview.interviewees.map((int) => int.name).join(", ")}</td>
                                         <td>{interview.interviewers.map((int) => int.name).join(", ")}</td>
                                     </tr>
@@ -256,7 +278,7 @@ export const ResultsDisplay: React.FC = () => {
                     </Card.Header>
                     <Card.Body>
                         <Row>
-                            <Col md={6}>
+                            <Col>
                                 {unmatchedResults.interviewees.length > 0 && (
                                     <div>
                                         <h6 className="text-danger">未配對面試者：</h6>
@@ -264,12 +286,14 @@ export const ResultsDisplay: React.FC = () => {
                                             <thead>
                                                 <tr>
                                                     <th>姓名</th>
+                                                    <th>可面試時間</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {unmatchedResults.interviewees.map((interviewee) => (
                                                     <tr key={interviewee.id} className="text-danger">
                                                         <td>{interviewee.name}</td>
+                                                        <td>{getAvalTime(interviewee)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -277,7 +301,7 @@ export const ResultsDisplay: React.FC = () => {
                                     </div>
                                 )}
                             </Col>
-                            <Col md={6}>
+                            {/* <Col md={6}>
                                 {unmatchedResults.interviewers.length > 0 && (
                                     <div>
                                         <h6 className="text-danger">未配對面試官：</h6>
@@ -297,7 +321,7 @@ export const ResultsDisplay: React.FC = () => {
                                         </Table>
                                     </div>
                                 )}
-                            </Col>
+                            </Col> */}
                         </Row>
                     </Card.Body>
                 </Card>
