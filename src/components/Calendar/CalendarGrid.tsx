@@ -1,18 +1,12 @@
 import React, { useLayoutEffect, useMemo } from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useScheduling } from "../../contexts/SchedulingContext";
-import type { ScheduledInterview } from "../../types";
+import type { Interviewee, Interviewer, ScheduledInterview } from "../../types";
+import { generateInterviewColorMap, generateTimeSlots, getDates, getInterviewColor, getTimeSlotInterviews, isTimeInSlot } from "../../utils/calendar";
 import CalendarTimeSlot from "./CalendarTimeSlot";
 
-import { getDates, getInterviewColor } from "../../utils/calendar";
 interface CalendarGridProps {
     scheduledInterviews: ScheduledInterview[];
-}
-
-interface InterviewSlot extends ScheduledInterview {
-    isStart: boolean;
-    isEnd: boolean;
-    colorIndex: number;
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
@@ -25,87 +19,19 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
     } = useScheduling();
 
     // 為每個面試分配一個唯一的顏色索引
-    const interviewColors = useMemo(() => {
-        const colorMap = new Map<string, number>();
-        scheduledInterviews.forEach((interview, index) => {
-            const interviewKey = `${interview.interviewees.map(idx=>idx.id).join("-")}-${interview.startTime}`;
-            colorMap.set(interviewKey, index % 8); // 最多使用8種顏色循環
-        });
-        return colorMap;
-    }, [scheduledInterviews]);
+    const interviewColors = useMemo(() => 
+        generateInterviewColorMap(scheduledInterviews),
+    [scheduledInterviews]);
 
     // 時間槽
-    const timeSlots: string[] = useMemo(() => {
-        const slots: string[] = [];
-        for (let hour = earliestTime; hour <= latestTime; hour++) {
-            slots.push(`${String(hour).padStart(2, "0")}:00`);
-            slots.push(`${String(hour).padStart(2, "0")}:30`);
-        }
-        return slots;
-    }, [earliestTime, latestTime, daysToShow, startDate]);
-
-    const getTimeSlotInterviews = (date: Date, timeSlot: string): InterviewSlot[] => {
-        const [hours, minutes] = timeSlot.split(":");
-        const checkDate = new Date(date);
-        checkDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-
-        const currentSlotTime = checkDate.getTime();
-        const slotDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
-
-        return scheduledInterviews
-            .filter((interview) => {
-                const startTime = new Date(interview.startTime);
-                const endTime = new Date(interview.endTime);
-
-                return (
-                    currentSlotTime >= startTime.getTime() &&
-                    currentSlotTime < endTime.getTime() &&
-                    startTime.getDate() === checkDate.getDate() &&
-                    startTime.getMonth() === checkDate.getMonth() &&
-                    startTime.getFullYear() === checkDate.getFullYear()
-                );
-            })
-            .map((interview) => {
-                const startTime = new Date(interview.startTime);
-                const endTime = new Date(interview.endTime);
-
-                const isStart = currentSlotTime === startTime.getTime();
-                const isEnd = currentSlotTime === endTime.getTime() - slotDuration;
-
-                // 使用面試唯一識別符來確定顏色
-                const interviewKey = `${interview.interviewees.map(idx=>idx.id).join("-")}-${interview.startTime}`;
-                const colorIndex = interviewColors.get(interviewKey) || 0;
-
-                return {
-                    ...interview,
-                    isStart,
-                    isEnd,
-                    colorIndex,
-                };
-            });
-    };
-
-    const isTimeInSlot = (checkDate: Date, availabilitySlot: string) => {
-        try {
-            const [slotStart, slotEnd] = availabilitySlot.split("/");
-            const startDate = new Date(slotStart);
-            const endDate = new Date(slotEnd);
-
-            return (
-                checkDate.getTime() >= startDate.getTime() &&
-                checkDate.getTime() < endDate.getTime() &&
-                checkDate.toDateString() === startDate.toDateString()
-            );
-        } catch (e) {
-            console.error("時間格式錯誤:", e);
-            return false;
-        }
-    };
+    const timeSlots = useMemo(() => 
+        generateTimeSlots(earliestTime, latestTime),
+    [earliestTime, latestTime]);
 
     const getAvailabilityData = (date: Date, timeSlot: string) => {
         if (viewMode === "scheduled" && scheduledInterviews.length > 0) {
             return {
-                interviews: getTimeSlotInterviews(date, timeSlot),
+                interviews: getTimeSlotInterviews(date, timeSlot, scheduledInterviews, interviewColors),
                 interviewers: [],
                 interviewees: [],
                 rooms: [],
@@ -117,8 +43,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
         checkDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
 
         // 根據視圖模式選擇不同的人員列表
-        let relevantInterviewers = interviewers;
-        let relevantInterviewees = interviewees;
+        let relevantInterviewers: Interviewer[] = interviewers;
+        let relevantInterviewees: Interviewee[] = interviewees;
 
         if (viewMode === "unmatched" && unmatchedResults) {
             relevantInterviewers = unmatchedResults.interviewers;
@@ -154,10 +80,10 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
     };
 
     const renderTooltip = (date: Date, timeSlot: string) => {
-        const targetInterview = getTimeSlotInterviews(date, timeSlot);
+        const targetInterview = getTimeSlotInterviews(date, timeSlot, scheduledInterviews, interviewColors);
         
         // 在 "scheduled" 模式下且沒有面試，則不顯示 tooltip
-        if (viewMode === "scheduled" && scheduledInterviews.length > 0 && targetInterview.length == 0) {
+        if (viewMode === "scheduled" && scheduledInterviews.length > 0 && targetInterview.length === 0) {
             return (
                 <Tooltip>
                     <div key={`${date}-tooltip`} style={{ display: "none" }}></div>

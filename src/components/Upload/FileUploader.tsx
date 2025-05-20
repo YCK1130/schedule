@@ -1,12 +1,11 @@
-import Papa from "papaparse";
 import type { ChangeEvent } from "react";
 import React, { useEffect, useState } from "react";
 import { Button, Card, Col, Form, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
-import { v4 as uuid } from "uuid";
-import * as XLSX from "xlsx";
 import { useScheduling } from "../../contexts/SchedulingContext";
 import "../../styles/restriction.css";
-import { colMapping } from "../../utils/const";
+import { downloadSample, handleFileUpload, loadSampleData } from "../../utils/fileUtils";
+import { getPositionsFromParticipants } from "../../utils/positionUtils";
+
 const FileUploader: React.FC = () => {
     const {
         groupRestrictions,
@@ -25,208 +24,6 @@ const FileUploader: React.FC = () => {
         interviewees: ["所有"],
     });
 
-    const formatData = (data: any[]) => {
-        return data.map((item: any) => {
-            const formattedItem: any = {};
-            for (const key in item) {
-                const mappedKey = colMapping.get(key.toLowerCase());
-
-                // 處理不同格式的時間輸入
-                if (mappedKey === "availability" && typeof item[key] === "string") {
-                    // 處理類似 "7/31 20:00 - 21:00" 的格式
-                    formattedItem[mappedKey] = formatTimeSlots(item[key]);
-                    formattedItem[`origin_${mappedKey}`] = item[key];
-                } else if (mappedKey) {
-                    formattedItem[mappedKey] = item[key];
-                }
-
-                formattedItem[key] = item[key];
-            }
-            if (!("id" in formattedItem)) {
-                formattedItem.id = `${formattedItem.name}${uuid()}`;
-            }
-            return formattedItem;
-        });
-    };
-
-    // 處理不同格式的時間輸入，統一轉換為系統格式
-    const formatTimeSlots = (timeString: string): string[] => {
-        if (!timeString) return [];
-
-        // 按逗號分割多個時間段
-        const slots = timeString.split(",").map((slot) => slot.trim());
-
-        return slots
-            .flatMap((slot) => {
-                // 檢查是否已經是標準格式 "yyyy-mm-ddThh:mm:ss/yyyy-mm-ddThh:mm:ss"
-                if (slot.includes("/") && slot.includes("T")) {
-                    // 如果已經是標準格式，檢查是否需要拆分
-                    const [start, end] = slot.split("/");
-                    const startDate = new Date(start);
-                    const endDate = new Date(end);
-                    
-                    // 計算時間差（毫秒）
-                    const diffMs = endDate.getTime() - startDate.getTime();
-                    const diffHours = diffMs / (1000 * 60 * 60);
-                    
-                    // 如果超過一小時，拆分成每小時一個時間段
-                    if (diffHours > 1) {
-                        return splitIntoHourlySlots(startDate, endDate);
-                    }
-                    return [slot];
-                }
-
-                // 處理 "7/31 20:00 - 21:00" 或 "7/31 20:00 ~ 21:00" 等類似格式
-                // 支援多種分隔符號: "-", "~", "～", "－"
-                const separators = ["-", "~", "～", "－"];
-                const weekDays = ["日", "一", "二", "三", "四", "五", "六", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                const parentheses = [["（", "）"], ["(", ")"]];
-                let dateTime = "";
-                let endTime = "";
-                for (const [open, close] of parentheses) {
-                    if (slot.includes(open) && slot.includes(close)) {
-                        slot = slot.replace(open, "").replace(close, "").trim();
-                        break;
-                    }
-                }
-                for(const weekDay of weekDays) {
-                    if (slot.includes(weekDay)) {
-                        slot = slot.replace(weekDay, "").trim();
-                        break;
-                    }
-                }
-                // 尋找使用的分隔符號
-                for (const separator of separators) {
-                    if (slot.includes(separator)) {
-                        [dateTime, endTime] = slot.split(separator).map((part) => part.trim());
-                        break;
-                    }
-                }
-
-                // 如果找到分隔符號且成功分割
-                if (dateTime && endTime) {
-                    // 進一步解析日期和時間
-                    const dateTimeParts = dateTime.split(" ");
-                    const date = dateTimeParts[0]; // 例如: "7/31"
-                    const startTime = dateTimeParts[1] || "00:00"; // 例如: "20:00"
-
-                    // 構建完整的日期時間
-                    const currentYear = new Date().getFullYear();
-                    const [month, day] = date.split("/");
-
-                    // 創建開始和結束時間，使用本地時區
-                    const startDateTime = new Date(currentYear, parseInt(month) - 1, parseInt(day));
-                    const [startHour, startMinute] = startTime.split(":");
-                    startDateTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
-
-                    // 創建結束時間
-                    const endDateTime = new Date(startDateTime);
-                    const [endHour, endMinute] = endTime.split(":");
-                    endDateTime.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
-
-                    // 計算時間差（毫秒）
-                    const diffMs = endDateTime.getTime() - startDateTime.getTime();
-                    const diffHours = diffMs / (1000 * 60 * 60);
-                    
-                    // 保留使用者的本地時區，轉換為標準格式 "yyyy-mm-ddThh:mm:ss/yyyy-mm-ddThh:mm:ss"
-                    const formatDate = (date: Date) => {
-                        const isoLike = date.toLocaleString("sv-SE").replace(" ", "T");
-                        return isoLike.substring(0, 19); // 去掉可能的毫秒部分
-                    };
-
-                    // 如果時間差大於1小時，將其分割成多個1小時的時間段
-                    if (diffHours > 1) {
-                        return splitIntoHourlySlots(startDateTime, endDateTime);
-                    }
-                    
-                    return [`${formatDate(startDateTime)}/${formatDate(endDateTime)}`];
-                }
-
-                return [slot];
-            })
-            .filter(Boolean);
-    };
-
-    // 輔助函數：將長時間段拆分為每小時一個的時間段
-    const splitIntoHourlySlots = (startDate: Date, endDate: Date): string[] => {
-        const slots: string[] = [];
-        const currentSlotStart = new Date(startDate);
-        
-        // 格式化日期為 ISO 字符串
-        const formatDate = (date: Date) => {
-            const isoLike = date.toLocaleString("sv-SE").replace(" ", "T");
-            return isoLike.substring(0, 19); // 去掉可能的毫秒部分
-        };
-        
-        while (currentSlotStart < endDate) {
-            // 創建當前時間段的結束時間（開始時間 + 1小時，或者如果剩餘時間不足1小時則為原始結束時間）
-            const currentSlotEnd = new Date(currentSlotStart);
-            currentSlotEnd.setHours(currentSlotEnd.getHours() + 1);
-            
-            // 確保不超過原始的結束時間
-            const slotEnd = currentSlotEnd <= endDate ? currentSlotEnd : new Date(endDate);
-            
-            // 添加格式化後的時間段
-            slots.push(`${formatDate(currentSlotStart)}/${formatDate(slotEnd)}`);
-            
-            // 將開始時間設為當前結束時間，準備下一個小時的時間段
-            currentSlotStart.setTime(currentSlotEnd.getTime());
-        }
-        
-        return slots;
-    };
-
-    const parseExcelFile = (file: File): Promise<any[]> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const buffer = e.target?.result as ArrayBuffer;
-                    const data = new Uint8Array(buffer);
-                    const workbook = XLSX.read(data, { type: "array" });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    resolve(jsonData);
-                } catch (error) {
-                    reject(error);
-                }
-            };
-            reader.onerror = (error) => reject(error);
-            reader.readAsArrayBuffer(file);
-        });
-    };
-
-    const handleFileUpload = async (file: File, setFileName: (name: string) => void, onDataLoaded: (data: any[]) => void, fileType: string) => {
-        if (!file) return;
-
-        setFileName(file.name);
-
-        try {
-            if (file.name.endsWith(".csv")) {
-                Papa.parse(file, {
-                    header: true,
-                    complete: (results) => {
-                        onDataLoaded(formatData(results.data));
-                    },
-                    error: (error) => {
-                        console.error("Error parsing file:", error);
-                        alert(`Error parsing ${fileType} file`);
-                    },
-                });
-            } else {
-                // Handle Excel files
-                const data = await parseExcelFile(file);
-
-                // 將資料轉換為符合需求的格式
-                onDataLoaded(formatData(data));
-            }
-        } catch (error) {
-            console.error("Error parsing file:", error);
-            alert(`Error parsing ${fileType} file`);
-        }
-    };
-
     const handleInterviewersUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -241,75 +38,30 @@ const FileUploader: React.FC = () => {
         }
     };
 
-    // 下載範例檔案
-    const downloadSample = (type: string) => {
-        const samplePath = `/schedule/samples/sample_${type}.csv`;
-        const link = document.createElement("a");
-        link.href = samplePath;
-        link.download = `sample_${type}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    // 載入範例資料
-    const loadSampleData = async (type: string) => {
-        const mapping: Map<string, string> = new Map([
-            ["interviewers", "/schedule/samples/real/interview_schedule_interviewers.csv"],
-            ["interviewees", "/schedule/samples/real/interview_schedule_interviewees.csv"],
-        ]);
-        try {
-            const response = await fetch(`${mapping.get(type)}`);
-            const blob = await response.blob();
-            const file = new File([blob], `sample_${type}.csv`, { type: "text/csv" });
-
-            switch (type) {
-                case "interviewers":
-                    handleFileUpload(file, setInterviewersFileName, onInterviewersLoaded, "interviewers");
-                    break;
-                case "interviewees":
-                    handleFileUpload(file, setIntervieweesFileName, onIntervieweesLoaded, "interviewees");
-                    break;
-            }
-        } catch (error) {
-            console.error("Error loading sample:", error);
-            alert(`Error loading sample ${type} file`);
+    // 載入範例資料的處理函數
+    const handleLoadSampleData = async (type: string) => {
+        if (type === "interviewers") {
+            await loadSampleData(type, setInterviewersFileName, onInterviewersLoaded);
+        } else if (type === "interviewees") {
+            await loadSampleData(type, setIntervieweesFileName, onIntervieweesLoaded);
         }
     };
 
     // 獲取可用的職位列表
     useEffect(() => {
         if (interviewers.length > 0) {
-            const positions = new Set(["所有"]);
-            interviewers.forEach((interviewer) => {
-                if (interviewer.position) {
-                    positions.add(interviewer.position);
-                }
-            });
+            const interviewerPositions = getPositionsFromParticipants(interviewers);
             setPositions((prev) => ({
                 ...prev,
-                interviewers: Array.from(positions).sort((a, b) => {
-                    if (a === "所有") return -1;
-                    if (b === "所有") return 1;
-                    return a.localeCompare(b);
-                }),
+                interviewers: interviewerPositions,
             }));
         }
 
         if (interviewees.length > 0) {
-            const positions = new Set(["所有"]);
-            interviewees.forEach((interviewee) => {
-                if (interviewee.position) {
-                    positions.add(interviewee.position);
-                }
-            });
+            const intervieweePositions = getPositionsFromParticipants(interviewees);
             setPositions((prev) => ({
                 ...prev,
-                interviewees: Array.from(positions).sort((a, b) => {
-                    if (a === "所有") return -1;
-                    if (b === "所有") return 1;
-                    return a.localeCompare(b);
-                }),
+                interviewees: intervieweePositions,
             }));
         }
     }, [interviewers, interviewees]);
@@ -372,7 +124,6 @@ const FileUploader: React.FC = () => {
                             size="sm"
                             className="remove-btn"
                             onClick={() => removeRestriction(groupId, index)}
-                            // disabled={groupRestrictions[groupId].length <= 1}
                         >
                             ✕
                         </Button>
@@ -419,7 +170,7 @@ const FileUploader: React.FC = () => {
                                             <Button variant="outline-secondary" size="sm" onClick={() => downloadSample(type)} className="sample-btn">
                                                 📥 範例
                                             </Button>
-                                            <Button variant="outline-info" size="sm" onClick={() => loadSampleData(type)} className="try-btn">
+                                            <Button variant="outline-info" size="sm" onClick={() => handleLoadSampleData(type)} className="try-btn">
                                                 ⚡️ 試用
                                             </Button>
                                         </div>
