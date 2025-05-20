@@ -1,17 +1,36 @@
 import React from "react";
+import { Button, ButtonGroup } from "react-bootstrap";
 import { useScheduling } from "../../contexts/SchedulingContext";
 import CalendarGrid from "./CalendarGrid";
 import CalendarHeader from "./CalendarHeader";
 import CalendarLegend from "./CalendarLegend";
-interface AvailabilityCalendarProps {}
 
-const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = () => {
-    const { scheduledInterviews } = useScheduling();
+const AvailabilityCalendar: React.FC = () => {
+    const { scheduledInterviews, unmatchedResults, viewMode, setViewMode } = useScheduling();
 
     return (
         <div className="calendar-container">
-            <div className="calendar-header-section">
+            <div className="calendar-header-section d-flex justify-content-between align-items-center">
                 <h5 className="m-0">{scheduledInterviews.length > 0 ? "面試時間表" : "可用時段總覽"}</h5>
+                
+                {/* 添加視圖切換按鈕 */}
+                {(scheduledInterviews.length > 0 && unmatchedResults && 
+                  (unmatchedResults.interviewees.length > 0)) && (
+                    <ButtonGroup size="sm">
+                        <Button 
+                            variant={viewMode === "scheduled" ? "primary" : "outline-primary"}
+                            onClick={() => setViewMode("scheduled")}
+                        >
+                            已排程
+                        </Button>
+                        <Button 
+                            variant={viewMode === "unmatched" ? "primary" : "outline-primary"}
+                            onClick={() => setViewMode("unmatched")}
+                        >
+                            未排程 ({unmatchedResults.interviewees.length})
+                        </Button>
+                    </ButtonGroup>
+                )}
             </div>
             <div className="calendar-main">
                 <div className="calendar-view">
@@ -22,7 +41,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = () => {
                 </div>
             </div>
             <div className="calendar-footer">
-                <CalendarLegend isScheduleView={scheduledInterviews.length > 0} />
+                <CalendarLegend isScheduleView={viewMode === "scheduled" && scheduledInterviews.length > 0} />
             </div>
         </div>
     );

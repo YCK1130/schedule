@@ -28,19 +28,88 @@ const FileUploader: React.FC = () => {
         interviewees: ["所有"],
     });
 
-    // const operators: ComparisonOperator[] = ['>', '<', '=', '>=', '<='];
     const formatData = (data: any[]) => {
         return data.map((item: any) => {
             const formattedItem: any = {};
             for (const key in item) {
                 const mappedKey = colMapping.get(key.toLowerCase());
-                if (mappedKey) {
+
+                // 處理不同格式的時間輸入
+                if (mappedKey === "availability" && typeof item[key] === "string") {
+                    // 處理類似 "7/31 20:00 - 21:00" 的格式
+                    formattedItem[mappedKey] = formatTimeSlots(item[key]);
+                } else if (mappedKey) {
                     formattedItem[mappedKey] = item[key];
                 }
+
                 formattedItem[key] = item[key];
             }
             return formattedItem;
         });
+    };
+
+    // 處理不同格式的時間輸入，統一轉換為系統格式
+    const formatTimeSlots = (timeString: string): string[] => {
+        if (!timeString) return [];
+
+        // 按逗號分割多個時間段
+        const slots = timeString.split(",").map((slot) => slot.trim());
+
+        return slots
+            .map((slot) => {
+                // 檢查是否已經是標準格式 "yyyy-mm-ddThh:mm:ss/yyyy-mm-ddThh:mm:ss"
+                if (slot.includes("/") && slot.includes("T")) {
+                    return slot;
+                }
+
+                // 處理 "7/31 20:00 - 21:00" 或 "7/31 20:00 ~ 21:00" 等類似格式
+                // 支援多種分隔符號: "-", "~", "～", "－"
+                const separators = ["-", "~", "～", "－"];
+                let dateTime = "";
+                let endTime = "";
+
+                // 尋找使用的分隔符號
+                for (const separator of separators) {
+                    if (slot.includes(separator)) {
+                        [dateTime, endTime] = slot.split(separator).map((part) => part.trim());
+                        break;
+                    }
+                }
+
+                // 如果找到分隔符號且成功分割
+                if (dateTime && endTime) {
+                    // 進一步解析日期和時間
+                    const dateTimeParts = dateTime.split(" ");
+                    const date = dateTimeParts[0]; // 例如: "7/31"
+                    const startTime = dateTimeParts[1] || "00:00"; // 例如: "20:00"
+
+                    // 構建完整的日期時間
+                    const currentYear = new Date().getFullYear();
+                    const [month, day] = date.split("/");
+
+                    // 創建開始和結束時間，使用本地時區
+                    const startDateTime = new Date(currentYear, parseInt(month) - 1, parseInt(day));
+                    const [startHour, startMinute] = startTime.split(":");
+                    startDateTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+
+                    // 創建結束時間
+                    const endDateTime = new Date(startDateTime);
+                    const [endHour, endMinute] = endTime.split(":");
+                    endDateTime.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
+
+                    // 保留使用者的本地時區，轉換為標準格式 "yyyy-mm-ddThh:mm:ss/yyyy-mm-ddThh:mm:ss"
+                    // 使用 toLocaleString 並指定 "sv-SE" 語言來獲得接近 ISO 格式的字符串但保留本地時區
+                    const formatDate = (date: Date) => {
+                        const isoLike = date.toLocaleString("sv-SE").replace(" ", "T");
+                        return isoLike.substring(0, 19); // 去掉可能的毫秒部分
+                    };
+
+                    return `${formatDate(startDateTime)}/${formatDate(endDateTime)}`;
+                }
+
+                return slot;
+            })
+            .filter(Boolean);
     };
 
     const parseExcelFile = (file: File): Promise<any[]> => {
@@ -122,12 +191,12 @@ const FileUploader: React.FC = () => {
     // 載入範例資料
     const loadSampleData = async (type: string) => {
         const mapping: Map<string, string> = new Map([
-            ["interviewers", "INT"],
-            ["interviewees", "EE"],
+            ["interviewers", "/scheduling_app/samples/real/interview_schedule_interviewers.csv"],
+            ["interviewees", "/scheduling_app/samples/real/interview_schedule_interviewees.csv"],
         ]);
         try {
-            console.log(`/scheduling_app/samples/csv/${mapping.get(type)}/10.csv`);
-            const response = await fetch(`/scheduling_app/samples/csv/${mapping.get(type)}/10.csv`);
+            // console.log(`/scheduling_app/samples/csv/${mapping.get(type)}/100.csv`);
+            const response = await fetch(`${mapping.get(type)}`);
             // const response = await fetch(`/scheduling_app/samples/sample_${type}.csv`);
             const blob = await response.blob();
             const file = new File([blob], `sample_${type}.csv`, { type: "text/csv" });
@@ -182,10 +251,15 @@ const FileUploader: React.FC = () => {
             }));
         }
     }, [interviewers, interviewees]);
-    
+
     const renderGroupRestriction = (groupId: string) => (
         <div className="restrictions-container">
-            <span className="restriction-label">{groupId === "interviewers" ? "面試官" : "應試者"} 條件限制</span>
+            <span className="restriction-label">{groupId === "interviewers" ? "面試官" : "應試者"} 數量條件限制</span>
+            {groupId === "interviewees" ? (
+                <div key="interviewees-same-position-constrain" className="restriction-box">
+                    <div className="restriction-row" style={{justifyContent: "center", color: "gray", fontWeight:500}}>職位相等</div>
+                </div>
+            ) : null}
             {groupRestrictions[groupId].map((restriction, index) => (
                 <div key={index} className="restriction-box">
                     <div className="restriction-row">

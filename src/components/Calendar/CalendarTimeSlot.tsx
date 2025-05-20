@@ -4,10 +4,8 @@ import type { Interviewee, Interviewer } from "../../types";
 interface TimeSlotProps {
     availability: {
         interviews: {
-            interviewerIds: string[];
-            interviewerNames: string[];
-            intervieweeIds: string[];
-            intervieweeNames: string[];
+            interviewers: {id: string, name: string, position?: string}[];
+            interviewees: {id: string, name: string, position?: string}[];
             startTime: string;
             endTime: string;
             colorIndex: number;
@@ -64,7 +62,7 @@ const TimeSlot: React.FC<TimeSlotProps> = ({ availability, showSchedule = false 
             );
         }
         return interviews.map((interview, index) => {
-            const key = `${interview.intervieweeIds[0]}-${interview.startTime}-${index}`;
+            const key = `${interview.interviewees[0].id}-${interview.startTime}-${index}`;
             // if (!interview.isStart) return null;
             let sty = null;
             if (interview.isStart) {

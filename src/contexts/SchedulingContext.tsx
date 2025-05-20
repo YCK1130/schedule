@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 import type { Interviewee, Interviewer, ScheduledInterview } from "../types";
 import { scheduleInterviews } from "../utils/algos/schedule";
+import { checkConflict } from "../utils/schedulerUtils";
 
 export type ComparisonOperator = ">" | "<" | "=" | ">=" | "<=";
 
@@ -16,6 +17,9 @@ interface UnmatchedResult {
     interviewees: Interviewee[];
     reasons: string[];
 }
+
+// 定義視圖模式類型
+export type ViewMode = "scheduled" | "unmatched";
 
 interface SchedulingContextType {
     interviewers: Interviewer[];
@@ -38,10 +42,11 @@ interface SchedulingContextType {
     maxCounts: {
         [key: string]: number;
     };
+    viewMode: ViewMode; // 新增視圖模式狀態
+    setViewMode: (mode: ViewMode) => void; // 新增設置視圖模式的方法
     updateMaxCount: (groupId: string, count: number) => void;
     addRestriction: (groupId: string) => void;
     removeRestriction: (groupId: string, index: number) => void;
-    updateAllRestrictions: (groupId: string, restrictions: GroupRestriction[]) => void;
     updateGroupRestriction: (groupId: string, restrictionIndex: number, restriction: Partial<GroupRestriction>) => void;
     onInterviewersLoaded: (data: Interviewer[]) => void;
     onIntervieweesLoaded: (data: Interviewee[]) => void;
@@ -63,6 +68,7 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [interviewees, setInterviewees] = useState<Interviewee[]>([]);
     const [scheduledInterviews, setScheduledInterviews] = useState<ScheduledInterview[]>([]);
     const [unmatchedResults, setUnmatchedResults] = useState<UnmatchedResult | null>(null);
+    const [viewMode, setViewMode] = useState<ViewMode>("scheduled"); // 新增視圖模式狀態，預設為已排程
 
     // 使用一個新的狀態來儲存多個限制條件
     const [groupRestrictions, setGroupRestrictions] = useState<{
@@ -105,8 +111,13 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             groupRestrictions,
             maxCounts,
         });
-
-        const result = scheduleInterviews(interviewers, interviewees, groupRestrictions);
+        const checkResult = checkConflict(groupRestrictions);
+        if (!checkResult.results && checkResult.conflict){
+            console.error("群組限制檢查失敗：", checkResult.conflict);
+            return;
+        }
+        console.log("群組限制檢查結果：", checkResult.results);
+        const result = scheduleInterviews(interviewers, interviewees, checkResult.results);
         console.log("配對結果：", result);
 
         setScheduledInterviews(result.interviews);
@@ -219,7 +230,10 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const updateGroupRestriction = (groupId: string, restrictionIndex: number, restriction: Partial<GroupRestriction>) => {
         console.log(`更新 ${groupId} 群組限制 ${restrictionIndex}：`, restriction);
         setGroupRestrictions((prev) => {
-            const updatedRestrictions = prev[groupId].map((r, i) => {
+                console.log(`更新 ${groupId} 群組限制 ${prev[groupId]}`);
+                const updatedRestrictions = prev[groupId].map((r, i) => {
+                console.log(`更新 ${groupId} 群組限制 ${restrictionIndex}：`, r, i);
+                
                 if (i === restrictionIndex) {
                     return { ...r, ...restriction };
                 }
@@ -247,6 +261,8 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 },
                 groupRestrictions,
                 maxCounts,
+                viewMode,
+                setViewMode,
                 onInterviewersLoaded,
                 onIntervieweesLoaded,
                 updateMaxCount: (groupId, count) => {
@@ -278,20 +294,15 @@ export const SchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         if (prev[groupId].length <= 1) {
                             return prev;
                         }
+                        console.log(`更新 ${groupId} 群組限制：`, prev);
 
                         const updatedRestrictions = prev[groupId].filter((_, i) => i !== index);
+                        console.log(`更新 ${groupId} 群組限制：`, updatedRestrictions);
                         return {
                             ...prev,
                             [groupId]: updatedRestrictions,
                         };
                     });
-                },
-                updateAllRestrictions: (groupId, restrictions) => {
-                    console.log(`更新所有 ${groupId} 群組限制：`, restrictions);
-                    setGroupRestrictions((prev) => ({
-                        ...prev,
-                        [groupId]: restrictions,
-                    }));
                 },
                 generateSchedule,
                 updateGroupRestriction,

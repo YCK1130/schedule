@@ -1,4 +1,3 @@
-import type { GroupRestriction } from "../../contexts/SchedulingContext";
 import type { Interviewee, Interviewer } from "../../types";
 import type { ScheduleResult } from "../schedulerUtils";
 import { optimizedGreedyMatching } from "./greedy";
@@ -6,9 +5,7 @@ import { optimizedGreedyMatching } from "./greedy";
 export function scheduleInterviews(
     interviewers: Interviewer[],
     interviewees: Interviewee[],
-    groupRestrictions: {
-        [key: string]: GroupRestriction[];
-    }
+    groupRestrictions: Map<string, { min: number; max: number }>
 ): ScheduleResult {
     console.log("進入排程函數", {
         面試官人數: interviewers.length,

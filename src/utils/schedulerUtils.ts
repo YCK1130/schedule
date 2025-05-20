@@ -9,55 +9,176 @@ export interface ScheduleResult {
         reasons: string[];
     };
 }
-
-
-/**
- * 檢查約束條件，並支援範圍設定
- * 當使用者設定一個範圍時，我們在 UI 會設定 operator 為 >=，
- * 但實際上我們需要同時考慮最小值和最大值
- */
-// const checkGroupRestrictionWithRange = (count: number, restriction: GroupRestriction, maxCount?: number): boolean => {
-//     // 基本運算符檢查
-//     const baseCheck = checkGroupRestriction(count, restriction);
-
-//     // 如果有提供 maxCount，則同時檢查上限
-//     if (maxCount !== undefined && restriction.operator === ">=") {
-//         return count >= restriction.count && count <= maxCount;
-//     }
-
-//     return baseCheck;
-// };
-
+const MAX_NUMBER = 1000000;
 /**
  * 取得特定群組的範圍限制
  * 從多個限制條件中找出適合特定職位的條件
  */
-export const getRestrictionRange = (restrictions: GroupRestriction[], position: string = "所有"): { min: number; max: number } => {
+export const getRestrictionRange = (restrictions: GroupRestriction[], position: string = "所有"): { min: number; max: number; conflict: boolean } => {
     // 尋找匹配職位的限制條件
-    const matchedRestrictions = restrictions.filter((r) => r.targetPosition === position || r.targetPosition === "所有" || !r.targetPosition);
-
+    const matchedRestrictions = restrictions.filter((r) => r.targetPosition === position);
+    console.log("restrictions:", restrictions, "position:", position);
+    console.log("matchedRestrictions:", matchedRestrictions);
+    let min = 1;
+    let max = MAX_NUMBER;
     if (matchedRestrictions.length === 0) {
         // 如果沒有匹配的條件，使用預設值
-        return { min: 1, max: 10 };
+        return { min, max, conflict: false };
     }
 
-    // 從所有匹配的條件中找出最嚴格的限制
-    let min = 1;
-    let max = 10;
-
     matchedRestrictions.forEach((restriction) => {
-        // 使用 minCount 和 maxCount 或 count
         const minValue = restriction.minCount;
         const maxValue = restriction.maxCount;
 
-        // 更新最小值和最大值
-        min = Math.max(min, minValue || 1);
-        max = Math.min(max, maxValue || 1000000); // 假設最大值不會超過 100000
+        min = Math.max(min, minValue);
+        max = Math.min(max, maxValue);
     });
 
-    return { min, max };
+    return { min, max, conflict: max < min };
 };
 
+export const checkConflict = (restrictions: {
+    [key: string]: GroupRestriction[];
+}): { valid: boolean; reason: string; conflict: boolean; results: Map<string, { min: number; max: number }> } => {
+    const tagetSet = new Map<string, { min: number; max: number }>();
+    let reasonString = "";
+    console.log("檢查衝突的限制條件:", restrictions);
+    for (const key in restrictions) {
+        const group = restrictions[key];
+        for (const item of group) {
+            const { targetPosition } = item;
+            if (!tagetSet.has(targetPosition)) {
+                const result = getRestrictionRange(restrictions[key], targetPosition);
+                if (result.conflict) {
+                    reasonString = `${reasonString}; ${key}:${targetPosition} 條件設置衝突`;
+                    continue;
+                }
+                tagetSet.set(`${key}:${targetPosition}`, { min: result.min, max: result.max });
+            }
+        }
+    }
+    console.log("檢查衝突:", reasonString);
+    console.log("檢查結果:", tagetSet);
+    if (reasonString.length === 0) return { valid: true, reason: "無衝突", conflict: false, results: tagetSet };
+    reasonString = reasonString.slice(2);
+    return { valid: false, reason: reasonString, conflict: true, results: {} as Map<string, { min: number; max: number }> };
+};
+
+export const checkRestrictions = (
+    restrictions: Map<string, { min: number; max: number }>,
+    interviewers: Interviewer[],
+    interviewees: Interviewee[],
+    interviews: ScheduledInterview[]
+): { valid: boolean; reason: string; interviewers: Interviewer[]; interviewees: Interviewee[] } => {
+    const interviewerAssignmentCounts = countInterviewerAssignments(interviews, interviewers);
+    const sortedInterviewers = [...interviewers].sort((a, b) => {
+        // 首先按照已分配的面試次數排序（優先選擇分配次數少的）
+        const aCount = interviewerAssignmentCounts.get(a.id) || 0;
+        const bCount = interviewerAssignmentCounts.get(b.id) || 0;
+        if (aCount !== bCount) return aCount - bCount;
+
+        // 次數相同時，按照可用時間段數量排序（優先選擇時間段少的）
+        return a.availability.length - b.availability.length;
+    });
+    const sortedInterviewees = [...interviewees].sort((a, b) => {
+        return a.availability.length - b.availability.length;
+    });
+
+    const validInterviewersMap = new Map<string, Interviewer[]>();
+    const validIntervieweesMap = new Map<string, Interviewee[]>();
+    restrictions = new Map<string, { min: number; max: number }>(restrictions);
+    console.log("restriction:", restrictions);
+    let shouldInterviewersNumber = interviewers.length;
+    let shouldIntervieweesNumber = interviewees.length;
+    if (!restrictions.has("interviewers:所有")) {
+        console.log("沒有 interviewers:所有 的限制條件", new Map<string, { min: number; max: number }>(restrictions));
+        restrictions.set("interviewers:所有", { min: 1, max: MAX_NUMBER });
+    }
+    if (!restrictions.has("interviewees:所有")) {
+        console.log("沒有 interviewees:所有 的限制條件", new Map<string, { min: number; max: number }>(restrictions));
+        restrictions.set("interviewees:所有", { min: 1, max: MAX_NUMBER });
+    }
+    let fail = false;
+    let failResult = { valid: false, reason: "", interviewers: [] as Interviewer[], interviewees: [] as Interviewee[] };
+    restrictions.forEach((value, key) => {
+        if (fail) return;
+        const [group, position] = key.split(":");
+        const { min, max } = value;
+        console.log(group, position, min, max);
+        if (group === "interviewers") {
+            const numTargets = sortedInterviewers.filter((interviewer) => interviewer.position === position || position === "所有");
+            const interviewersCount = Math.min(numTargets.length, max);
+            if (interviewersCount < min) {
+                fail = true;
+                failResult = {
+                    valid: false,
+                    reason: `面試官 ${position} 數量不合, ${interviewersCount} < ${min}`,
+                    interviewers: [] as Interviewer[],
+                    interviewees: [] as Interviewee[],
+                };
+            }
+            // return { valid: false, reason: `面試官 ${position} 數量不合`, interviewers: [] as Interviewer[], interviewees: [] as Interviewee[] };
+            else if (position !== "所有") {
+                // const selectedInterviewers = sortedInterviewers
+                //     .filter((interviewer) => interviewer.position === position)
+                //     .slice(0, interviewersCount);
+                validInterviewersMap.set(position, numTargets.slice(0, interviewersCount));
+            } else {
+                shouldInterviewersNumber = min;
+            }
+        } else if (group === "interviewees") {
+            const numTargets = sortedInterviewees.filter((interviewee) => interviewee.position === position || position === "所有");
+            const intervieweesCount = Math.min(numTargets.length, max);
+            if (intervieweesCount < min) {
+                fail = true;
+                failResult = {
+                    valid: false,
+                    reason: `應試者 ${position} 數量不合, ${intervieweesCount} < ${min}`,
+                    interviewers: [] as Interviewer[],
+                    interviewees: [] as Interviewee[],
+                };
+            } else if (position !== "所有") {
+                // const selectedInterviewees = interviewees.filter((interviewee) => interviewee.position === position);
+                validIntervieweesMap.set(position, numTargets.slice(0, intervieweesCount));
+            } else {
+                shouldIntervieweesNumber = min;
+            }
+        }
+    });
+    if (fail) {
+        console.log("檢查限制條件失敗:", failResult);
+        return failResult;
+    }
+    console.log("validInterviewersMap:", validInterviewersMap);
+    const interviewersResults = [...validInterviewersMap.entries()].reduce((acc, cur) => [...acc, ...cur[1]], [] as Interviewer[]);
+    const intervieweesResults = [...validIntervieweesMap.entries()].reduce((acc, cur) => [...acc, ...cur[1]], [] as Interviewee[]);
+    let count = 0;
+    console.log("shouldInterviewersNumber:", shouldInterviewersNumber);
+    console.log("shouldIntervieweesNumber:", shouldIntervieweesNumber);
+    while (interviewersResults.length < shouldInterviewersNumber) {
+        if (count >= interviewers.length) {
+            return { valid: false, reason: `面試官數量不合`, interviewers: [] as Interviewer[], interviewees: [] as Interviewee[] };
+        }
+        if (interviewersResults.includes(interviewers[count])) {
+            count++;
+            continue;
+        }
+        interviewersResults.push(interviewers[count]);
+    }
+    count = 0;
+    while (intervieweesResults.length < shouldIntervieweesNumber) {
+        if (count >= interviewees.length) {
+            return { valid: false, reason: `應試者數量不合`, interviewers: [] as Interviewer[], interviewees: [] as Interviewee[] };
+        }
+        if (intervieweesResults.includes(interviewees[count])) {
+            count++;
+            continue;
+        }
+        intervieweesResults.push(interviewees[count]);
+    }
+
+    return { valid: true, reason: ``, interviewers: interviewersResults, interviewees: intervieweesResults };
+};
 export const parseTimeSlot = (slot: string) => {
     const [start, end] = slot.split("/");
     return { start: new Date(start), end: new Date(end) };
@@ -116,7 +237,12 @@ export const isTimeSlotAvailable = (person: Interviewer | Interviewee, targetSlo
     const alreadyScheduled = scheduledInterviews.some((interview) => {
         const slot = `${interview.startTime}/${interview.endTime}`;
         const isOccupied = isOverlapping(slot, targetSlot);
-        return isOccupied && (isInterviewer ? interview.interviewerIds.includes(person.id) : interview.intervieweeIds.includes(person.id));
+        return (
+            isOccupied &&
+            (isInterviewer
+                ? interview.interviewers.map((i) => i.id).includes(person.id)
+                : interview.interviewers.map((i) => i.id).includes(person.id))
+        );
     });
 
     return !alreadyScheduled;
@@ -124,59 +250,61 @@ export const isTimeSlotAvailable = (person: Interviewer | Interviewee, targetSlo
 
 // 獲取所有可能的時間段
 export const getAllTimeSlots = (interviewers: Interviewer[], interviewees: Interviewee[]) => {
-  const allSlots = new Set<string>();
-  // 收集所有面試官和應試者的時間段
-  interviewers.forEach((interviewer) => {
-      // 確保 availability 是陣列
-      const availabilityArray = interviewer.availability;
-      if (!Array.isArray(availabilityArray)) {
-          console.warn(`面試官 ${interviewer.name} 的可用時段不是有效的陣列`, interviewer.availability);
-          return false;
-      }
+    const allSlots = new Set<string>();
+    // 收集所有面試官和應試者的時間段
+    interviewers.forEach((interviewer) => {
+        // 確保 availability 是陣列
+        const availabilityArray = interviewer.availability;
+        if (!Array.isArray(availabilityArray)) {
+            console.warn(`面試官 ${interviewer.name} 的可用時段不是有效的陣列`, interviewer.availability);
+            return false;
+        }
 
-      availabilityArray.forEach((slot) => {
-          if (typeof slot === "string" && slot.includes("/")) {
-              allSlots.add(slot.trim());
-          }
-      });
-  });
+        availabilityArray.forEach((slot) => {
+            if (typeof slot === "string" && slot.includes("/")) {
+                allSlots.add(slot.trim());
+            }
+        });
+    });
 
-  interviewees.forEach((interviewee) => {
-      // 確保 availability 是陣列
-      const availabilityArray = interviewee.availability;
+    interviewees.forEach((interviewee) => {
+        // 確保 availability 是陣列
+        const availabilityArray = interviewee.availability;
 
-      if (!Array.isArray(availabilityArray)) {
-          console.warn(`應試者 ${interviewee.name} 的可用時段不是有效的陣列`, interviewee.availability);
-          return false;
-      }
-      availabilityArray.forEach((slot) => {
-          if (typeof slot === "string" && slot.includes("/")) {
-              allSlots.add(slot.trim());
-          }
-      });
-  });
+        if (!Array.isArray(availabilityArray)) {
+            console.warn(`應試者 ${interviewee.name} 的可用時段不是有效的陣列`, interviewee.availability);
+            return false;
+        }
+        availabilityArray.forEach((slot) => {
+            if (typeof slot === "string" && slot.includes("/")) {
+                allSlots.add(slot.trim());
+            }
+        });
+    });
 
-  return Array.from(allSlots);
+    return Array.from(allSlots);
 };
 
 // 計算每個面試官已分配的面試次數
 export const countInterviewerAssignments = (scheduledInterviews: ScheduledInterview[], interviewers: Interviewer[]) => {
-  const counts = new Map<string, number>();
+    const counts = new Map<string, number>();
 
-  // 初始化所有面試官的計數為0
-  interviewers.forEach((interviewer) => {
-      counts.set(interviewer.id, 0);
-  });
+    // 初始化所有面試官的計數為0
+    interviewers.forEach((interviewer) => {
+        counts.set(interviewer.id, 0);
+    });
 
-  // 統計已分配的面試
-  scheduledInterviews.forEach((interview) => {
-      interview.interviewerIds.forEach((id) => {
-          const currentCount = counts.get(id) || 0;
-          counts.set(id, currentCount + 1);
-      });
-  });
+    // 統計已分配的面試
+    scheduledInterviews.forEach((interview) => {
+        interview.interviewers
+            .map((i) => i.id)
+            .forEach((id) => {
+                const currentCount = counts.get(id) || 0;
+                counts.set(id, currentCount + 1);
+            });
+    });
 
-  return counts;
+    return counts;
 };
 
 /**

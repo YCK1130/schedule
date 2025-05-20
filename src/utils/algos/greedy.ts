@@ -1,9 +1,7 @@
-import type { GroupRestriction } from "../../contexts/SchedulingContext";
 import type { Interviewee, Interviewer, ScheduledInterview } from "../../types";
 import {
-    countInterviewerAssignments,
+    checkRestrictions,
     getAllTimeSlots,
-    getRestrictionRange,
     isTimeSlotAvailable, parseTimeSlot
 } from "../schedulerUtils";
 
@@ -11,9 +9,7 @@ import {
 export const optimizedGreedyMatching = (
     interviewers: Interviewer[],
     interviewees: Interviewee[],
-    groupRestrictions: {
-        [key: string]: GroupRestriction[];
-    }
+    groupRestrictions: Map<string, { min: number; max: number }>
 ) => {
     // 先確保所有時間段格式正確
     const unmatched = {
@@ -59,90 +55,69 @@ export const optimizedGreedyMatching = (
 
     // 追蹤已分配的應試者
     const assignedIntervieweeIds = new Set<string>();
-
-    // 開始為每個時間段分配面試
-    for (const timeSlot of allTimeSlots) {
-        // 尋找這個時間段可用的應試者（排除已分配的應試者）
-        const availableInterviewees = validInterviewees.filter(
-            (interviewee) => 
-                isTimeSlotAvailable(interviewee, timeSlot, interviews) && 
-                !unmatched.interviewees.includes(interviewee) &&
-                !assignedIntervieweeIds.has(interviewee.id) // 確保應試者尚未被分配
-        );
-
-        // 如果沒有可用的應試者，跳過這個時間段
-        if (availableInterviewees.length === 0) continue;
-
-        // 尋找這個時間段可用的面試官
-        const availableInterviewers = validInterviewers.filter((interviewer) => isTimeSlotAvailable(interviewer, timeSlot, interviews));
-
-        // 獲取面試官限制範圍
-        const interviewerRange = getRestrictionRange(groupRestrictions.interviewers);
-        const minInterviewers = interviewerRange.min;
-        const maxInterviewers = interviewerRange.max;
-
-        // 如果沒有足夠的面試官，跳過這個時間段
-        if (availableInterviewers.length < minInterviewers) continue;
-
-        // 基於已分配次數和可用時間段數量排序面試官
-        const interviewerAssignmentCounts = countInterviewerAssignments(interviews, interviewers);
-        const sortedInterviewers = [...availableInterviewers].sort((a, b) => {
-            // 首先按照已分配的面試次數排序（優先選擇分配次數少的）
-            const aCount = interviewerAssignmentCounts.get(a.id) || 0;
-            const bCount = interviewerAssignmentCounts.get(b.id) || 0;
-            if (aCount !== bCount) return aCount - bCount;
-
-            // 次數相同時，按照可用時間段數量排序（優先選擇時間段少的）
-            return a.availability.length - b.availability.length;
-        });
-
-        // 選擇介於最小值和最大值之間的面試官數量
-        // 如果可用面試官數量大於最大限制，則選擇最大限制數量
-        // 否則選擇所有可用的面試官
-        const interviewerCount = Math.min(availableInterviewers.length, maxInterviewers);
-
-        // 至少要滿足最小數量要求
-        if (interviewerCount < minInterviewers) continue;
-
-        // 選擇所需數量的面試官
-        const selectedInterviewers = sortedInterviewers.slice(0, interviewerCount);
-
-        // 獲取應試者限制範圍
-        const intervieweeRange = getRestrictionRange(groupRestrictions.interviewees);
-        const minInterviewees = intervieweeRange.min;
-        const maxInterviewees = intervieweeRange.max;
-
-        // 決定要分配多少應試者，在範圍內儘量多分配
-        const intervieweeCount = Math.min(availableInterviewees.length, maxInterviewees);
-
-        // 至少要滿足最小數量要求
-        if (intervieweeCount < minInterviewees) continue;
-
-        const intervieweesToAssign = availableInterviewees.slice(0, intervieweeCount);
-
-        // 創建面試安排
-        const [startTime, endTime] = timeSlot.split("/");
-        const interview: ScheduledInterview = {
-            interviewerIds: selectedInterviewers.map((i) => i.id),
-            interviewerNames: selectedInterviewers.map((i) => i.name),
-            intervieweeIds: intervieweesToAssign.map((i) => i.id),
-            intervieweeNames: intervieweesToAssign.map((i) => i.name),
-            startTime,
-            endTime,
-        };
-
-        interviews.push(interview);
+    
+    // 按照職位分組應試者
+    const intervieweesByPosition: Record<string, Interviewee[]> = {};
+    validInterviewees.forEach((interviewee) => {
+        const position = interviewee.position || "未指定";
+        if (!intervieweesByPosition[position]) {
+            intervieweesByPosition[position] = [];
+        }
+        intervieweesByPosition[position].push(interviewee);
+    });
+    
+    // 為每個職位組的應試者分配面試時間
+    for (const position in intervieweesByPosition) {
+        console.log(`開始為職位 "${position}" 的應試者安排面試...`);
         
-        // 將已分配的應試者加入到追蹤集合中
-        intervieweesToAssign.forEach(interviewee => {
-            assignedIntervieweeIds.add(interviewee.id);
-        });
-        
-        console.log(
-            `安排了面試: ${intervieweesToAssign.map((i) => i.name).join(", ")} 與 ${selectedInterviewers
-                .map((i) => i.name)
-                .join(", ")} 在 ${startTime}`
-        );
+        // 開始為每個時間段分配面試
+        for (const timeSlot of allTimeSlots) {
+            // 尋找這個時間段可用的應試者（同一職位且尚未分配）
+            const positionInterviewees = intervieweesByPosition[position];
+            const availableInterviewees = positionInterviewees.filter(
+                (interviewee) => 
+                    isTimeSlotAvailable(interviewee, timeSlot, interviews) && 
+                    !unmatched.interviewees.includes(interviewee) &&
+                    !assignedIntervieweeIds.has(interviewee.id)
+            );
+
+            // 如果沒有可用的應試者，跳過這個時間段
+            if (availableInterviewees.length === 0) continue;
+
+            // 尋找這個時間段可用的面試官
+            const availableInterviewers = validInterviewers.filter((interviewer) => 
+                isTimeSlotAvailable(interviewer, timeSlot, interviews)
+            );
+
+            
+            const result = checkRestrictions(groupRestrictions, availableInterviewers, availableInterviewees, interviews);
+
+            if (!result.valid) {
+                unmatched.reasons.push(result.reason);
+                continue;
+            }
+            // 創建面試安排
+            const [startTime, endTime] = timeSlot.split("/");
+            const interview: ScheduledInterview = {
+                interviewers: result.interviewers.map((i) => ({id: i.id, name: i.name, position: i.position })),
+                interviewees: result.interviewees.map((i) => ({id: i.id, name: i.name, position: i.position })),
+                startTime,
+                endTime,
+            };
+
+            interviews.push(interview);
+            
+            // 將已分配的應試者加入到追蹤集合中
+            result.interviewees.forEach(interviewee => {
+                assignedIntervieweeIds.add(interviewee.id);
+            });
+            
+            console.log(
+                `安排了面試: ${result.interviewees.map((i) => i.name).join(", ")} (${position}) 與 ${result.interviewers
+                    .map((i) => i.name)
+                    .join(", ")} 在 ${startTime}`
+            );
+        }
     }
 
     // 標記所有未分配的應試者
@@ -156,7 +131,7 @@ export const optimizedGreedyMatching = (
     });
 
     // 標記所有未分配的面試官
-    const assignedInterviewerIds = new Set(interviews.flatMap((i) => i.interviewerIds));
+    const assignedInterviewerIds = new Set(interviews.flatMap((i) => i.interviewers.map(j => j.id)));
     const unmatchedInterviewers = validInterviewers.filter((interviewer) => !assignedInterviewerIds.has(interviewer.id));
 
     unmatchedInterviewers.forEach((interviewer) => {

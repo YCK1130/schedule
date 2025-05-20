@@ -55,9 +55,9 @@ export const ResultsDisplay: React.FC = () => {
               </thead>
               <tbody>
                 {scheduledInterviews.map((interview) => (
-                  <tr key={`${interview.intervieweeIds[0]}-${interview.startTime}`}>
-                    <td>{interview.intervieweeNames.join(', ')}</td>
-                    <td>{interview.interviewerNames.join(', ')}</td>
+                  <tr key={`${interview.interviewees[0].id}-${interview.startTime}`}>
+                    <td>{interview.interviewees.map(int=>int.name).join(', ')}</td>
+                    <td>{interview.interviewers.map(int=>int.name).join(', ')}</td>
                     <td>{formatDate(interview.startTime)}</td>
                     <td>{formatDate(interview.endTime)}</td>
                   </tr>

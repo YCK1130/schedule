@@ -19,6 +19,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
     const {
         interviewers,
         interviewees,
+        unmatchedResults,
+        viewMode,
         displayInfo: { startDate, daysToShow, earliestTime, latestTime },
     } = useScheduling();
 
@@ -26,12 +28,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
     const interviewColors = useMemo(() => {
         const colorMap = new Map<string, number>();
         scheduledInterviews.forEach((interview, index) => {
-            const interviewKey = `${interview.intervieweeIds.join("-")}-${interview.startTime}`;
+            const interviewKey = `${interview.interviewees.map(idx=>idx.id).join("-")}-${interview.startTime}`;
             colorMap.set(interviewKey, index % 8); // 最多使用8種顏色循環
         });
         return colorMap;
     }, [scheduledInterviews]);
 
+    // 時間槽
     const timeSlots: string[] = useMemo(() => {
         const slots: string[] = [];
         for (let hour = earliestTime; hour <= latestTime; hour++) {
@@ -39,7 +42,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
             slots.push(`${String(hour).padStart(2, "0")}:30`);
         }
         return slots;
-    }, [earliestTime, latestTime]);
+    }, [earliestTime, latestTime, daysToShow, startDate]);
 
     const getTimeSlotInterviews = (date: Date, timeSlot: string): InterviewSlot[] => {
         const [hours, minutes] = timeSlot.split(":");
@@ -70,7 +73,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                 const isEnd = currentSlotTime === endTime.getTime() - slotDuration;
 
                 // 使用面試唯一識別符來確定顏色
-                const interviewKey = `${interview.intervieweeIds.join("-")}-${interview.startTime}`;
+                const interviewKey = `${interview.interviewees.map(idx=>idx.id).join("-")}-${interview.startTime}`;
                 const colorIndex = interviewColors.get(interviewKey) || 0;
 
                 return {
@@ -100,7 +103,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
     };
 
     const getAvailabilityData = (date: Date, timeSlot: string) => {
-        if (scheduledInterviews.length > 0) {
+        if (viewMode === "scheduled" && scheduledInterviews.length > 0) {
             return {
                 interviews: getTimeSlotInterviews(date, timeSlot),
                 interviewers: [],
@@ -113,9 +116,18 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
         const checkDate = new Date(date);
         checkDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
 
+        // 根據視圖模式選擇不同的人員列表
+        let relevantInterviewers = interviewers;
+        let relevantInterviewees = interviewees;
+
+        if (viewMode === "unmatched" && unmatchedResults) {
+            relevantInterviewers = unmatchedResults.interviewers;
+            relevantInterviewees = unmatchedResults.interviewees;
+        }
+
         // 確保 interviewer.availability 是數組
         const availableInterviewers =
-            interviewers?.filter((interviewer) => {
+            relevantInterviewers?.filter((interviewer) => {
                 // 安全檢查：確保 availability 存在且是數組
                 if (!interviewer.availability || !Array.isArray(interviewer.availability)) {
                     console.warn(`面試官 ${interviewer.name} 的 availability 不是有效數組`, interviewer.availability);
@@ -126,7 +138,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
 
         // 確保 interviewee.availability 是數組
         const availableInterviewees =
-            interviewees?.filter((interviewee) => {
+            relevantInterviewees?.filter((interviewee) => {
                 // 安全檢查：確保 availability 存在且是數組
                 if (!interviewee.availability || !Array.isArray(interviewee.availability)) {
                     console.warn(`應試者 ${interviewee.name} 的 availability 不是有效數組`, interviewee.availability);
@@ -134,7 +146,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                 }
                 return interviewee.availability.some((slot) => isTimeInSlot(checkDate, slot));
             }) || [];
-
+        // console.log(checkDate, "可用的面試官:", availableInterviewers);
         return {
             interviews: [],
             interviewers: availableInterviewers,
@@ -144,41 +156,79 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
 
     const renderTooltip = (date: Date, timeSlot: string) => {
         const targetInterview = getTimeSlotInterviews(date, timeSlot);
-        return scheduledInterviews.length > 0 && targetInterview.length == 0 ? (
-            <Tooltip >
-                <div key={`${date}-tooltip`} style={{ display: "none" }}></div>
-            </Tooltip>
-        ) : (
+        
+        // 在 "scheduled" 模式下且沒有面試，則不顯示 tooltip
+        if (viewMode === "scheduled" && scheduledInterviews.length > 0 && targetInterview.length == 0) {
+            return (
+                <Tooltip>
+                    <div key={`${date}-tooltip`} style={{ display: "none" }}></div>
+                </Tooltip>
+            );
+        }
+        
+        return (
             <Tooltip className="availability-tooltip">
                 <div className="tooltip-content">
-                    {scheduledInterviews.length > 0 ? (
+                    {viewMode === "scheduled" && scheduledInterviews.length > 0 ? (
                         targetInterview.map((interview) => {
-                            const interviewKey = `${interview.intervieweeIds.join("-")}-${interview.startTime}`;
-                            const colorIndex = interviewColors.get(interviewKey) || 0;
-
                             return (
                                 <div
-                                    key={`${interview.intervieweeIds[0]}-${interview.startTime}-${interview.isStart}`}
-                                    className="interview-slot"
-                                    style={{
-                                        borderLeft: `3px solid ${getInterviewColor(colorIndex)}`,
-                                        padding: "8px",
-                                        color: "#000",
-                                        // backgroundColor: "#f8fafc",
-                                    }}
+                                    key={`${interview.interviewees.map(idx=>idx.id)[0]}-${interview.startTime}-interview-details`}
+                                    className="interview-details"
                                 >
                                     <div
-                                        key={`${interview.intervieweeIds[0]}-${interview.startTime}-interview-details`}
-                                        className="interview-details"
+                                        key={`${interview.interviewees.map(idx=>idx.id)[0]}-${interview.startTime}-interview-slot`}
+                                        className="interview-slot"
+                                        style={{
+                                            borderLeft: `3px solid ${getInterviewColor(interview.colorIndex)}`,
+                                            padding: "8px",
+                                            color: "#000",
+                                        }}
                                     >
-                                        <p>
-                                            <strong>面試官：</strong> {interview.interviewerNames.join(", ")}
-                                        </p>
-                                    </div>
-                                    <div className="interview-details">
-                                        <p>
-                                            <strong>應試者：</strong> {interview.intervieweeNames.join(", ")}
-                                        </p>
+                                        <div
+                                            key={`${interview.interviewees.map(idx=>idx.id)[0]}-${interview.startTime}-interview-details`}
+                                            className="interview-details"
+                                        >
+                                            <p>
+                                                <strong>面試官：</strong> 
+                                                {interview.interviewers.map(idx=>idx.name).map((name, i) => {
+                                                    // 獲取面試官的 ID
+                                                    const interviewerId = interview.interviewers.map(idx=>idx.id)[i];
+                                                    // 嘗試找到對應的面試官
+                                                    const interviewer = interviewers.find(i => i.id === interviewerId);
+                                                    // 獲取職位的最後一個字元
+                                                    const positionChar = interviewer?.position ? 
+                                                        interviewer.position.charAt(0) : 'N/A';
+                                                    
+                                                    return (
+                                                        <span key={`interviewer-${i}`}>
+                                                            {name} ({positionChar}) {i < interview.interviewers.map(idx=>idx.name).length - 1 ? ", " : ""}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </p>
+                                        </div>
+                                        <div className="interview-details">
+                                            <p>
+                                                <strong>應試者：</strong> 
+                                                {interview.interviewees.map(idx=>idx.name).map((name, i) => {
+                                                    // 獲取應試者的 ID
+                                                    const intervieweeId = interview.interviewees.map(idx=>idx.id)[i];
+                                                    // 嘗試找到對應的應試者
+                                                    const interviewee = interviewees.find(i => i.id === intervieweeId);
+                                                    // 獲取職位的最後一個字元
+                                                    const positionChar = interviewee?.position ? 
+                                                        interviewee.position.charAt(0) : 'N/A';
+                                                    
+                                                    return (
+                                                        <span key={`interviewee-${i}`}>
+                                                            {name} ({positionChar})
+                                                            {i < interview.interviewees.map(idx=>idx.name).length - 1 ? ", " : ""}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -188,13 +238,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                             <p>
                                 <strong>面試官：</strong>{" "}
                                 {getAvailabilityData(date, timeSlot)
-                                    .interviewers.map((i) => i.name)
+                                    .interviewers.map((i) => `${i.name} (${i.position?.charAt(0) || 'N/A'})`)
                                     .join(", ") || "無"}
                             </p>
                             <p>
                                 <strong>應試者：</strong>{" "}
                                 {getAvailabilityData(date, timeSlot)
-                                    .interviewees.map((i) => i.name)
+                                    .interviewees.map((i) => `${i.name} (${i.position?.charAt(0) || 'N/A'})`)
                                     .join(", ") || "無"}
                             </p>
                         </div>
@@ -220,22 +270,28 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                         </div>
                     ))}
             </div>
-            {getDates(startDate, daysToShow).map((date) => (
-                <div key={date.toISOString()} className="day-column">
-                    {timeSlots.map((timeSlot: string, index: number) => (
-                        <OverlayTrigger
-                            key={`${date.toISOString()}-${timeSlot}`}
-                            placement="auto"
-                            delay={{ show: 50, hide: 0 }}
-                            overlay={renderTooltip(date, timeSlot)}
-                            trigger={["hover", "click"]}
-                            rootClose
-                        >
-                            <div className={`time-slot-wrapper ${index % 2 === 1 ? "half-hour" : ""}`}>
-                                <CalendarTimeSlot availability={getAvailabilityData(date, timeSlot)} showSchedule={scheduledInterviews.length > 0} />
-                            </div>
-                        </OverlayTrigger>
-                    ))}
+
+            {getDates(startDate, daysToShow).map((date, dateIndex) => (
+                <div key={`column-${dateIndex}`} className="day-column">
+                    {timeSlots.map((timeSlot, timeIndex) => {
+                        const availabilityData = getAvailabilityData(date, timeSlot);
+
+                        return (
+                            <OverlayTrigger
+                                key={`overlay-${dateIndex}-${timeIndex}`}
+                                placement="auto"
+                                delay={{ show: 50, hide: 100 }}
+                                overlay={renderTooltip(date, timeSlot)}
+                            >
+                                <div className="time-slot-wrapper" key={`slot-${dateIndex}-${timeIndex}`}>
+                                    <CalendarTimeSlot
+                                        availability={availabilityData}
+                                        showSchedule={viewMode === "scheduled" && scheduledInterviews.length > 0}
+                                    />
+                                </div>
+                            </OverlayTrigger>
+                        );
+                    })}
                 </div>
             ))}
         </div>

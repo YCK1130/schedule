@@ -18,10 +18,8 @@ export interface Interviewee {
 }
 
 export interface ScheduledInterview {
-    interviewerIds: string[];
-    interviewerNames: string[];
-    intervieweeIds: string[];
-    intervieweeNames: string[];
+    interviewers: {id: string, name: string, position?: string}[];
+    interviewees: {id: string, name: string, position?: string}[];
     startTime: string;
     endTime: string;
 }
