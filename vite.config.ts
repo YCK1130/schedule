@@ -10,7 +10,7 @@ export default defineConfig({
     wasm(),
     topLevelAwait()
   ],
-  base: '/scheduling_app/',
+  base: '/schedule/',
   optimizeDeps: {
     exclude: ['glpk-wasm']
   },

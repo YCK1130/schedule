@@ -179,7 +179,7 @@ const FileUploader: React.FC = () => {
 
     // 下載範例檔案
     const downloadSample = (type: string) => {
-        const samplePath = `/scheduling_app/samples/sample_${type}.csv`;
+        const samplePath = `/schedule/samples/sample_${type}.csv`;
         const link = document.createElement("a");
         link.href = samplePath;
         link.download = `sample_${type}.csv`;
@@ -191,13 +191,13 @@ const FileUploader: React.FC = () => {
     // 載入範例資料
     const loadSampleData = async (type: string) => {
         const mapping: Map<string, string> = new Map([
-            ["interviewers", "/scheduling_app/samples/real/interview_schedule_interviewers.csv"],
-            ["interviewees", "/scheduling_app/samples/real/interview_schedule_interviewees.csv"],
+            ["interviewers", "/schedule/samples/real/interview_schedule_interviewers.csv"],
+            ["interviewees", "/schedule/samples/real/interview_schedule_interviewees.csv"],
         ]);
         try {
-            // console.log(`/scheduling_app/samples/csv/${mapping.get(type)}/100.csv`);
+            // console.log(`/schedule/samples/csv/${mapping.get(type)}/100.csv`);
             const response = await fetch(`${mapping.get(type)}`);
-            // const response = await fetch(`/scheduling_app/samples/sample_${type}.csv`);
+            // const response = await fetch(`/schedule/samples/sample_${type}.csv`);
             const blob = await response.blob();
             const file = new File([blob], `sample_${type}.csv`, { type: "text/csv" });
 
