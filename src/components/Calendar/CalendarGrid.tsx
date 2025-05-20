@@ -181,6 +181,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                         className="interview-slot"
                                         style={{
                                             borderLeft: `3px solid ${getInterviewColor(interview.colorIndex)}`,
+                                            margin: "8px 0",
                                             padding: "8px",
                                             color: "#000",
                                         }}

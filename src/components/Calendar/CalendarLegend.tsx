@@ -14,7 +14,7 @@ const CalendarLegend: React.FC<CalendarLegendProps> = ({ isScheduleView = false 
 
   const scheduleLegendItems = [
     { level: 0, text: '無面試' },
-    { level: 3, text: '已排程面試' },
+    { level: 3, text: '已排程面試: 姓名(職)' },
   ];
 
   const legendItems = isScheduleView ? scheduleLegendItems : availabilityLegendItems;

@@ -18,8 +18,8 @@ export const optimizedGreedyMatching = (
         reasons: [] as string[],
     };
     const interviews: ScheduledInterview[] = [];
-    const validInterviewers = interviewers.filter((interviewer) => interviewer.availability && interviewer.availability.length > 0);
-    const validInterviewees = interviewees.filter((interviewee) => interviewee.availability && interviewee.availability.length > 0);
+    const validInterviewers = interviewers.filter((interviewer) => interviewer.availability.length > 0);
+    const validInterviewees = interviewees.filter((interviewee) => interviewee.availability.length > 0);
     // 如果沒有有效的面試官或應試者，直接返回
     if (validInterviewers.length === 0 || validInterviewees.length === 0) {
         console.log("沒有有效的面試官或應試者");
@@ -65,6 +65,7 @@ export const optimizedGreedyMatching = (
         }
         intervieweesByPosition[position].push(interviewee);
     });
+    console.log(intervieweesByPosition);
     
     // 為每個職位組的應試者分配面試時間
     for (const position in intervieweesByPosition) {
@@ -77,9 +78,11 @@ export const optimizedGreedyMatching = (
             const availableInterviewees = positionInterviewees.filter(
                 (interviewee) => 
                     isTimeSlotAvailable(interviewee, timeSlot, interviews) && 
-                    !unmatched.interviewees.includes(interviewee) &&
+                    // !unmatched.interviewees.includes(interviewee) &&
                     !assignedIntervieweeIds.has(interviewee.id)
             );
+            console.log(`時段：${timeSlot}`);
+            console.log(`assignedIntervieweeIds:`, assignedIntervieweeIds);
 
             // 如果沒有可用的應試者，跳過這個時間段
             if (availableInterviewees.length === 0) continue;
@@ -88,11 +91,13 @@ export const optimizedGreedyMatching = (
             const availableInterviewers = validInterviewers.filter((interviewer) => 
                 isTimeSlotAvailable(interviewer, timeSlot, interviews)
             );
-
+            console.log(`可用的面試官: ${availableInterviewers.map((i) => i.name).join(", ")}`);
+            console.log(`可用的應試者: ${availableInterviewees.map((i) => i.name).join(", ")}`);
             
             const result = checkRestrictions(groupRestrictions, availableInterviewers, availableInterviewees, interviews);
 
             if (!result.valid) {
+                console.log(`時段 ${timeSlot} 不符合限制條件: ${result.reason}`);
                 unmatched.reasons.push(result.reason);
                 continue;
             }

@@ -2,22 +2,19 @@ import Papa from "papaparse";
 import type { ChangeEvent } from "react";
 import React, { useEffect, useState } from "react";
 import { Button, Card, Col, Form, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
+import { v4 as uuid } from "uuid";
 import * as XLSX from "xlsx";
 import { useScheduling } from "../../contexts/SchedulingContext";
 import "../../styles/restriction.css";
 import { colMapping } from "../../utils/const";
-
 const FileUploader: React.FC = () => {
     const {
         groupRestrictions,
         updateGroupRestriction,
         addRestriction,
         removeRestriction,
-        // updateAllRestrictions,
         onIntervieweesLoaded,
         onInterviewersLoaded,
-        // setInterviewees,
-        // setInterviewers,
         interviewers,
         interviewees,
     } = useScheduling();
@@ -43,6 +40,9 @@ const FileUploader: React.FC = () => {
                 }
 
                 formattedItem[key] = item[key];
+            }
+            if (!("id" in formattedItem)) {
+                formattedItem.id = `${formattedItem.name}${uuid()}`;
             }
             return formattedItem;
         });
