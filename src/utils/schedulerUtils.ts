@@ -141,7 +141,7 @@ export const checkRestrictions = (
                 // const selectedInterviewees = interviewees.filter((interviewee) => interviewee.position === position);
                 validIntervieweesMap.set(position, numTargets.slice(0, intervieweesCount));
             } else {
-                shouldIntervieweesNumber = min;
+                shouldIntervieweesNumber = intervieweesCount;
             }
         }
     });
@@ -159,7 +159,7 @@ export const checkRestrictions = (
         if (count >= interviewers.length) {
             return { valid: false, reason: `面試官數量不合`, interviewers: [] as Interviewer[], interviewees: [] as Interviewee[] };
         }
-        if (interviewersResults.includes(interviewers[count])) {
+        if (interviewersResults.includes(interviewers[count]) || validInterviewersMap.has(`${interviewers[count]?.position}`)) {
             count++;
             continue;
         }
@@ -170,7 +170,7 @@ export const checkRestrictions = (
         if (count >= interviewees.length) {
             return { valid: false, reason: `應試者數量不合`, interviewers: [] as Interviewer[], interviewees: [] as Interviewee[] };
         }
-        if (intervieweesResults.includes(interviewees[count])) {
+        if (intervieweesResults.includes(interviewees[count])  || validIntervieweesMap.has(`${interviewers[count]?.position}`)) {
             count++;
             continue;
         }

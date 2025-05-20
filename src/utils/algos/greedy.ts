@@ -124,6 +124,31 @@ export const optimizedGreedyMatching = (
             );
         }
     }
+    // 填滿可以填滿的 interviews
+    for(const inter of interviews) {
+        const ints = inter.interviewers.map(i => i.id);
+        // 尋找這個時間段可用的應試者（同一職位且尚未分配）
+        console.log("重填中...")
+        console.log(`時段：${inter.startTime}/${inter.endTime}`);
+
+        const availableInters = validInterviewers.filter((interviewer) => 
+            isTimeSlotAvailable(interviewer, `${inter.startTime}/${inter.endTime}`, interviews)
+            && !ints.includes(interviewer.id)
+        );
+        const existPosition = Array.from(groupRestrictions.keys()).map((i) => i.split(":")[1]).filter((i) => i !== "所有");
+        const sortedInters = availableInters.sort((a, b) => {  
+            return a.availability.length - b.availability.length;
+        })
+        const { max } = groupRestrictions.get("interviewers:所有") || { min: 1, max: 100 };
+        const numTargets = sortedInters.filter((interviewer) => !existPosition.includes(`${interviewer.position}`));
+        const interviewersCount = Math.min(numTargets.length + ints.length , max) - ints.length;
+        console.log(`可用的面試官數量: ${interviewersCount}, ${existPosition} ${numTargets.map((i) => i.position).join(", ")}`);
+        if (interviewersCount > 0) {
+            const selectedInters = sortedInters.slice(0, interviewersCount);
+            inter.interviewers.push(...selectedInters.map(i => ({id: i.id, name: i.name, position: i.position})));
+            console.log(`新增安排了面試官: ${selectedInters.map((i) => i.name).join(", ")} 在 ${inter.startTime}`);
+        }
+    }
 
     // 標記所有未分配的應試者
     const unmatchedInterviewees = validInterviewees.filter((interviewee) => !assignedIntervieweeIds.has(interviewee.id));

@@ -192,18 +192,18 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                         >
                                             <p>
                                                 <strong>面試官：</strong> 
-                                                {interview.interviewers.map(idx=>idx.name).map((name, i) => {
+                                                {interview.interviewers.map((inter, i) => {
                                                     // 獲取面試官的 ID
-                                                    const interviewerId = interview.interviewers.map(idx=>idx.id)[i];
-                                                    // 嘗試找到對應的面試官
-                                                    const interviewer = interviewers.find(i => i.id === interviewerId);
+                                                    // const interviewerId = interview.interviewers.map(idx=>idx.id)[i];
+                                                    // // 嘗試找到對應的面試官
+                                                    // const interviewer = interviewers.find(i => i.id === interviewerId);
                                                     // 獲取職位的最後一個字元
-                                                    const positionChar = interviewer?.position ? 
-                                                        interviewer.position.charAt(0) : 'N/A';
+                                                    const positionChar = inter?.position ? 
+                                                    inter.position.charAt(0) : 'N/A';
                                                     
                                                     return (
                                                         <span key={`interviewer-${i}`}>
-                                                            {name} ({positionChar}) {i < interview.interviewers.map(idx=>idx.name).length - 1 ? ", " : ""}
+                                                            {inter.name} ({positionChar}) {i < interview.interviewers.length - 1 ? ", " : ""}
                                                         </span>
                                                     );
                                                 })}
@@ -212,19 +212,19 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                         <div className="interview-details">
                                             <p>
                                                 <strong>應試者：</strong> 
-                                                {interview.interviewees.map(idx=>idx.name).map((name, i) => {
+                                                {interview.interviewees.map((ee, i) => {
                                                     // 獲取應試者的 ID
-                                                    const intervieweeId = interview.interviewees.map(idx=>idx.id)[i];
+                                                    // const intervieweeId = interview.interviewees.map(idx=>idx.id)[i];
                                                     // 嘗試找到對應的應試者
-                                                    const interviewee = interviewees.find(i => i.id === intervieweeId);
+                                                    // const interviewee = interviewees.find(i => i.id === intervieweeId);
                                                     // 獲取職位的最後一個字元
-                                                    const positionChar = interviewee?.position ? 
-                                                        interviewee.position.charAt(0) : 'N/A';
+                                                    const positionChar = ee?.position ? 
+                                                    ee.position.charAt(0) : 'N/A';
                                                     
                                                     return (
                                                         <span key={`interviewee-${i}`}>
-                                                            {name} ({positionChar})
-                                                            {i < interview.interviewees.map(idx=>idx.name).length - 1 ? ", " : ""}
+                                                            {ee.name} ({positionChar})
+                                                            {i < interview.interviewees.length - 1 ? ", " : ""}
                                                         </span>
                                                     );
                                                 })}
