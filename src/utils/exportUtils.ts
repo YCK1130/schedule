@@ -1,5 +1,6 @@
 import { saveAs } from "file-saver";
 import Papa from "papaparse";
+import * as XLSX from 'xlsx';
 import type { Interviewee, Interviewer, ScheduledInterview } from "../types";
 import { formatTimeRange } from "./timeUtils";
 
@@ -167,6 +168,126 @@ export const exportToCsv = (
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     saveAs(blob, fileName);
+};
+
+/**
+ * 將選擇的數據匯出為 xlsx 檔案中的不同工作表
+ */
+export const exportToXlsx = (
+    exportTypes: string[],
+    scheduledInterviews: ScheduledInterview[],
+    interviewers: Interviewer[],
+    interviewees: Interviewee[]
+): void => {
+    if (scheduledInterviews.length === 0 || exportTypes.length === 0) return;
+
+    // 創建新的工作簿
+    const workbook = XLSX.utils.book_new();
+    
+    // 匯出面試數據
+    if (exportTypes.includes('interviews')) {
+        const interviewsData = scheduledInterviews.map((interview) => ({
+            interviewers: interview.interviewers.map((int) => int.name).join(", "),
+            interviewees: interview.interviewees.map((int) => int.name).join(", "),
+            id: interview.id,
+            position: interview.interviewees[0].position,
+            ...formatTimeRange(interview.startTime, interview.endTime),
+        }));
+
+        const formattedData = interviewsData
+            .map((r) => ({
+                日期: r.date,
+                場次時間: r.time,
+                面試編號: r.id || -1,
+                申請者身份: r.position,
+                幹部: r.interviewers,
+                面試者: r.interviewees,
+            }))
+            .sort((a, b) => a.日期.localeCompare(b.日期) || a.場次時間.localeCompare(b.場次時間) || a.面試編號 - b.面試編號);
+
+        // 創建工作表
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        XLSX.utils.book_append_sheet(workbook, worksheet, '面試場次安排表');
+    }
+
+    // 匯出面試官各場次數據
+    if (exportTypes.includes('interviewers')) {
+        const interviewersData = prepareParticipantData(true, interviewers, scheduledInterviews);
+        const flatData = interviewersData.reduce((acc, curr) => {
+            const { name, position, timeMap } = curr;
+            timeMap.forEach((value, key) => {
+                const [type, index] = key.split("_");
+                if (type === "time" || type === "id") return;
+                const date = value;
+                const time = timeMap.get(`time_${index}`);
+                const id = timeMap.get(`id_${index}`);
+                if (typeof time === "string" && typeof date === "string" && typeof id === "number") {
+                    acc.push({ name, position, date, time, id });
+                }
+            });
+            return acc;
+        }, [] as { name: string; position: string; date: string; time: string; id: number }[]);
+
+        const formattedData = flatData
+            .map((r) => ({
+                姓名: r.name,
+                職位: r.position,
+                日期: r.date,
+                面試時間: r.time,
+                面試編號: r.id,
+            }))
+            .sort((a, b) => a.姓名.localeCompare(b.姓名));
+
+        // 創建工作表
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        XLSX.utils.book_append_sheet(workbook, worksheet, '面試官各場次安排');
+    }
+
+    // 匯出面試官統計數據
+    if (exportTypes.includes('interviewers_stats')) {
+        const interviewersStatsData = prepareParticipantData(true, interviewers, scheduledInterviews);
+        const flatStatsData = interviewersStatsData.map((curr) => {
+            const { name, position, timeSlotsNum } = curr;
+            return { name, position, num: timeSlotsNum };
+        });
+
+        const formattedData = flatStatsData
+            .map((r) => ({
+                姓名: r.name,
+                職位: r.position,
+                安排場次數: r.num,
+            }))
+            .sort((a, b) => a.姓名.localeCompare(b.姓名));
+
+        // 創建工作表
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        XLSX.utils.book_append_sheet(workbook, worksheet, '面試官場次統計');
+    }
+
+    // 匯出應試者數據
+    if (exportTypes.includes('interviewees')) {
+        const intervieweesData = prepareParticipantData(false, interviewees, scheduledInterviews);
+
+        const formattedData = intervieweesData
+            .map((r) => ({
+                姓名: r.name,
+                職位: r.position,
+                日期: r.timeMap.get("date"),
+                面試時間: r.timeMap.get("time"),
+                面試場次編號: r.timeMap.get("id"),
+                可面試時間: r.origin_availability,
+            }))
+            .sort((a, b) => a.姓名.localeCompare(b.姓名));
+
+        // 創建工作表
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        XLSX.utils.book_append_sheet(workbook, worksheet, '應試者面試安排');
+    }
+
+    // 寫入緩衝區並下載
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, '面試安排總表.xlsx');
 };
 
 /**
