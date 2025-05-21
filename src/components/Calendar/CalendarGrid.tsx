@@ -26,10 +26,9 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
     const getAvailabilityData = (date: Date, timeSlot: string) => {
         if (viewMode === "scheduled" && scheduledInterviews.length > 0) {
             return {
-                interviews: getTimeSlotInterviews(date, timeSlot, scheduledInterviews, interviewColors),
-                interviewers: [],
-                interviewees: [],
-                rooms: [],
+                interview: getTimeSlotInterviews(date, timeSlot, scheduledInterviews, interviewColors)[0],
+                interviewersNum: 0,
+                intervieweesNum: 0,
             };
         }
 
@@ -57,7 +56,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                 return interviewer.availability.some((slot) => isTimeInSlot(checkDate, slot));
             }) || [];
 
-        // 確保 interviewee.availability 是數組
         const availableInterviewees =
             relevantInterviewees?.filter((interviewee) => {
                 // 安全檢查：確保 availability 存在且是數組
@@ -68,9 +66,10 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                 return interviewee.availability.some((slot) => isTimeInSlot(checkDate, slot));
             }) || [];
         return {
-            interviews: [],
-            interviewers: availableInterviewers,
-            interviewees: availableInterviewees,
+            interviewersNum: availableInterviewers.length,
+            interviewersNames: availableInterviewers.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", "),
+            intervieweesNum: availableInterviewees.length,
+            intervieweesNames: availableInterviewees.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", "),
         };
     };
 
@@ -113,29 +112,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                         >
                                             <p>
                                                 <strong>面試官：</strong>
-                                                {interview.interviewers.map((inter, i) => {
-                                                    const positionChar = inter?.position ? inter.position.charAt(0) : "N/A";
-
-                                                    return (
-                                                        <span key={`interviewer-${i}`}>
-                                                            {inter.name} ({positionChar}) {i < interview.interviewers.length - 1 ? ", " : ""}
-                                                        </span>
-                                                    );
-                                                })}
+                                                {interview.interviewers.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", ")}
                                             </p>
                                         </div>
                                         <div className="interview-details">
                                             <p>
                                                 <strong>應試者：</strong>
-                                                {interview.interviewees.map((ee, i) => {
-                                                    const positionChar = ee?.position ? ee.position.charAt(0) : "N/A";
-
-                                                    return (
-                                                        <span key={`interviewee-${i}`}>
-                                                            {ee.name} ({positionChar}){i < interview.interviewees.length - 1 ? ", " : ""}
-                                                        </span>
-                                                    );
-                                                })}
+                                                {interview.interviewees.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", ")}
                                             </p>
                                         </div>
                                     </div>
@@ -145,16 +128,10 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                     ) : (
                         <div key={`${date}-tooltip`}>
                             <p>
-                                <strong>面試官：</strong>{" "}
-                                {getAvailabilityData(date, timeSlot)
-                                    .interviewers.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`)
-                                    .join(", ") || "無"}
+                                <strong>面試官：</strong> {getAvailabilityData(date, timeSlot).interviewersNames || "無"}
                             </p>
                             <p>
-                                <strong>應試者：</strong>{" "}
-                                {getAvailabilityData(date, timeSlot)
-                                    .interviewees.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`)
-                                    .join(", ") || "無"}
+                                <strong>應試者：</strong> {getAvailabilityData(date, timeSlot).intervieweesNames || "無"}
                             </p>
                         </div>
                     )}

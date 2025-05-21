@@ -12,13 +12,13 @@ const SchedulingContainer: React.FC = () => {
 
     return (
         <Container className="py-2">
-            <Row>
+            <Row className="fix-width-container">
                 <Col style={{ display: "flex", justifyContent: "center" }}>
                     <FileUploader />
                 </Col>
             </Row>
             {allDataLoaded && (
-                <Row>
+                <Row className="fix-width-container">
                     <Col className="text-end">
                         <button className="continue-btn" onClick={generateSchedule}>
                             {scheduledInterviews.length > 0 ? "重新配對 🔄" : "開始配對 ▶"}

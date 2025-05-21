@@ -165,6 +165,7 @@ export const checkRestrictions = (
 
     return { valid: true, reason: ``, interviewers: interviewersResults, interviewees: intervieweesResults };
 };
+
 export const parseTimeSlot = (slot: string) => {
     const [start, end] = slot.split("/");
     return { start: new Date(start), end: new Date(end) };

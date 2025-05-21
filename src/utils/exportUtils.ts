@@ -48,6 +48,7 @@ export const prepareParticipantData = (
             position: participant.position || "",
             email: participant.email || "",
             timeMap: timeMap,
+            timeSlotsNum: timeSlots.length,
             origin_availability: participant.origin_availability,
         };
     });
@@ -149,8 +150,8 @@ export const exportToCsv = (
         case "interviewers_stats":
             const interviewersStatsData = prepareParticipantData(true, interviewers, scheduledInterviews);
             const flatStatsData = interviewersStatsData.map((curr) => {
-                const { name, position, timeMap } = curr;
-                return { name, position, num: timeMap.size };
+                const { name, position, timeSlotsNum } = curr;
+                return { name, position, num: timeSlotsNum };
             });
             
             csvContent = Papa.unparse(

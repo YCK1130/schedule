@@ -7,6 +7,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   max-width: var(--card-max-width) !important;
 }
+.fix-width-container {
+  max-width: var(--card-max-width) !important;
+}
 
 .tooltip {
   font-size: 0.875rem;

@@ -53,8 +53,8 @@ const FileUploader: React.FC = () => {
                 <span className="restriction-label">{groupId === "interviewers" ? "面試官" : "應試者"} 數量條件限制</span>
                 {groupId === "interviewees" ? (
                     <div key="interviewees-same-position-constrain" className="restriction-box">
-                        <div className="restriction-row" style={{ justifyContent: "center", color: "gray", fontWeight: 500 }}>
-                            職位相等
+                        <div className="restriction-row" style={{color: "gray", fontWeight: 500}}>
+                            職位相同
                         </div>
                     </div>
                 ) : null}

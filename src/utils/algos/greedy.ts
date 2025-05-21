@@ -109,6 +109,7 @@ export const optimizedGreedyMatching = (
 
         }
     }
+    
     // 填滿可以填滿的 interviews
     for (const inter of interviews) {
         const ints = inter.interviewers.map((i) => i.id);
@@ -131,7 +132,12 @@ export const optimizedGreedyMatching = (
             inter.interviewers.push(...selectedInters.map((i) => ({ id: i.id, name: i.name, position: i.position })));
         }
     }
-
+    
+    validInterviewers.forEach((interviewer) => {
+        if (interviewer.origin_availability) {
+            interviewer.availability = interviewer.origin_availability
+        }
+    });
     // 標記所有未分配的應試者
     const unmatchedInterviewees = validInterviewees.filter((interviewee) => !assignedIntervieweeIds.has(interviewee.id));
 
