@@ -22,6 +22,7 @@ export const useScheduling = () => {
     }
     return context;
 };
+
 export const SchedulingProvider: React.FC<{
     children: React.ReactNode;
     interviewers: Interviewer[];
@@ -97,7 +98,25 @@ export const SchedulingProvider: React.FC<{
         setGroupRestrictions((prev) => {
             const updatedRestrictions = prev[groupId].map((r, i) => {
                 if (i === restrictionIndex) {
-                    return { ...r, ...restriction };
+                    const updatedRestriction = { ...r };
+                    
+                    // 處理 minCount 和 maxCount 的 null 值
+                    // 當暫時為 null 時，保留原值；若有明確的新值則更新
+                    Object.keys(restriction).forEach((key) => {
+                        const typedKey = key as keyof GroupRestriction;
+                        if ((typedKey === 'minCount' || typedKey === 'maxCount') && 
+                            restriction[typedKey] !== null && 
+                            restriction[typedKey] !== undefined) {
+                            // 確保值不是 null 或 undefined
+                            // TypeScript 現在知道值不是 null 或 undefined
+                            updatedRestriction[typedKey] = restriction[typedKey] as number;
+                        } else if (typedKey !== 'minCount' && typedKey !== 'maxCount') {
+                            // 處理非數值屬性
+                            updatedRestriction[typedKey] = restriction[typedKey] as any;
+                        }
+                    });
+                    
+                    return updatedRestriction;
                 }
                 return r;
             });

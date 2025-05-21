@@ -66,13 +66,17 @@ const FileUploader: React.FC = () => {
                         restriction={restriction}
                         positionsList={positions[groupId]}
                         onPositionChange={(e) => updateGroupRestriction(groupId, index, { targetPosition: e.target.value })}
-                        onMinChange={(e) => {
-                            const value = parseInt(e.target.value) || 1;
-                            updateGroupRestriction(groupId, index, { minCount: value });
+                        onMinChange={(value) => {
+                            // 當值為 null 時，保持原來的值不變，讓上層組件負責處理
+                            if (value !== null) {
+                                updateGroupRestriction(groupId, index, { minCount: value });
+                            }
                         }}
-                        onMaxChange={(e) => {
-                            const value = parseInt(e.target.value) || 1;
-                            updateGroupRestriction(groupId, index, { maxCount: value });
+                        onMaxChange={(value) => {
+                            // 當值為 null 時，保持原來的值不變，讓上層組件負責處理
+                            if (value !== null) {
+                                updateGroupRestriction(groupId, index, { maxCount: value });
+                            }
                         }}
                         removeRow={() => removeRestriction(groupId, index)}
                     />
