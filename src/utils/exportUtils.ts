@@ -294,7 +294,6 @@ export const exportToXlsx = (
  * 獲取應試者的可用時間
  */
 export const getAvailableTime = (interviewee: Interviewee): string => {
-    console.log("interviewee", interviewee);
     if (Array.isArray(interviewee.input_availability)) {
         return interviewee.input_availability
             .map((slot) => {
@@ -302,17 +301,6 @@ export const getAvailableTime = (interviewee: Interviewee): string => {
                 return `${date} ${time}`;
             })
             .join(", ");
-    } else {
-        return interviewee.input_availability;
-    }
-    // } else if (Array.isArray(interviewee.availability)) {
-    //     return interviewee.availability
-    //         .map((slot) => {
-    //             const { date, time } = formatTimeRange(slot.split("/")[0], slot.split("/")[1]);
-    //             return `${date} ${time}`;
-    //         })
-    //         .join(", ");
-    // } else {
-    //     return interviewee.availability;
-    // }
+    } 
+    return interviewee.input_availability;
 };
