@@ -1,12 +1,12 @@
 import React from "react";
 import { Col, Container, Row } from "react-bootstrap";
-import AvailabilityCalendar from "../components/Calendar/AvailabilityCalendar";
-import { ResultsDisplay } from "../components/ResultsDisplay";
 import FileUploader from "../components/Upload/FileUploader";
+import { useDataSave } from "../contexts/DataContext";
 import { useScheduling } from "../contexts/SchedulingContext";
 
 const SchedulingContainer: React.FC = () => {
-    const { dataLoaded, scheduledInterviews, generateSchedule } = useScheduling();
+    const { generateSchedule } = useScheduling();
+    const { scheduledInterviews, dataLoaded } = useDataSave();
 
     const allDataLoaded = dataLoaded.interviewers && dataLoaded.interviewees;
 
@@ -26,16 +26,6 @@ const SchedulingContainer: React.FC = () => {
                     </Col>
                 </Row>
             )}
-            <Row>
-                <Col>
-                    <AvailabilityCalendar />
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <ResultsDisplay />
-                </Col>
-            </Row>
         </Container>
     );
 };

@@ -1,5 +1,4 @@
-import type { GroupRestriction } from "../contexts/SchedulingContext";
-import type { Interviewee, Interviewer, ScheduledInterview } from "../types";
+import type { GroupRestriction, Interviewee, Interviewer, ScheduledInterview } from "../types";
 
 export interface ScheduleResult {
     interviews: ScheduledInterview[];

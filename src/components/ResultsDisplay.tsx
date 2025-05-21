@@ -1,11 +1,10 @@
 import React from "react";
 import { Alert, Card, Col, Dropdown, Row, Table } from "react-bootstrap";
-import { useScheduling } from "../contexts/SchedulingContext";
+import { useDataSave } from "../contexts/DataContext";
 import { exportToCsv, getAvailableTime } from "../utils/exportUtils";
 import { formatTimeRange } from "../utils/timeUtils";
-
 export const ResultsDisplay: React.FC = () => {
-    const { scheduledInterviews, unmatchedResults, interviewers, interviewees } = useScheduling();
+    const {interviewers, interviewees, scheduledInterviews, unmatchedResults} = useDataSave();
 
     const handleExportToCsv = (exportType: string) => {
         exportToCsv(exportType, scheduledInterviews, interviewers, interviewees);

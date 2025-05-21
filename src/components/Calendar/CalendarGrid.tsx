@@ -1,10 +1,9 @@
 import React, { useLayoutEffect, useMemo } from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
-import { useScheduling } from "../../contexts/SchedulingContext";
+import { useDataSave } from "../../contexts/DataContext";
 import type { Interviewee, Interviewer, ScheduledInterview } from "../../types";
 import { generateInterviewColorMap, generateTimeSlots, getDates, getInterviewColor, getTimeSlotInterviews, isTimeInSlot } from "../../utils/calendar";
 import CalendarTimeSlot from "./CalendarTimeSlot";
-
 interface CalendarGridProps {
     scheduledInterviews: ScheduledInterview[];
 }
@@ -16,17 +15,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
         unmatchedResults,
         viewMode,
         displayInfo: { startDate, daysToShow, earliestTime, latestTime },
-    } = useScheduling();
+    } = useDataSave();
 
     // 為每個面試分配一個唯一的顏色索引
-    const interviewColors = useMemo(() => 
-        generateInterviewColorMap(scheduledInterviews),
-    [scheduledInterviews]);
+    const interviewColors = useMemo(() => generateInterviewColorMap(scheduledInterviews), [scheduledInterviews]);
 
     // 時間槽
-    const timeSlots = useMemo(() => 
-        generateTimeSlots(earliestTime, latestTime),
-    [earliestTime, latestTime]);
+    const timeSlots = useMemo(() => generateTimeSlots(earliestTime, latestTime), [earliestTime, latestTime]);
 
     const getAvailabilityData = (date: Date, timeSlot: string) => {
         if (viewMode === "scheduled" && scheduledInterviews.length > 0) {
@@ -81,7 +76,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
 
     const renderTooltip = (date: Date, timeSlot: string) => {
         const targetInterview = getTimeSlotInterviews(date, timeSlot, scheduledInterviews, interviewColors);
-        
+
         // 在 "scheduled" 模式下且沒有面試，則不顯示 tooltip
         if (viewMode === "scheduled" && scheduledInterviews.length > 0 && targetInterview.length === 0) {
             return (
@@ -90,7 +85,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                 </Tooltip>
             );
         }
-        
+
         return (
             <Tooltip className="availability-tooltip">
                 <div className="tooltip-content">
@@ -98,11 +93,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                         targetInterview.map((interview) => {
                             return (
                                 <div
-                                    key={`${interview.interviewees.map(idx=>idx.id)[0]}-${interview.startTime}-interview-details`}
+                                    key={`${interview.interviewees.map((idx) => idx.id)[0]}-${interview.startTime}-interview-details`}
                                     className="interview-details"
                                 >
                                     <div
-                                        key={`${interview.interviewees.map(idx=>idx.id)[0]}-${interview.startTime}-interview-slot`}
+                                        key={`${interview.interviewees.map((idx) => idx.id)[0]}-${interview.startTime}-interview-slot`}
                                         className="interview-slot"
                                         style={{
                                             borderLeft: `3px solid ${getInterviewColor(interview.colorIndex)}`,
@@ -113,15 +108,14 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                     >
                                         <span className="interview-time">面試編號：{interview.id}</span>
                                         <div
-                                            key={`${interview.interviewees.map(idx=>idx.id)[0]}-${interview.startTime}-interview-details`}
+                                            key={`${interview.interviewees.map((idx) => idx.id)[0]}-${interview.startTime}-interview-details`}
                                             className="interview-details"
                                         >
                                             <p>
-                                                <strong>面試官：</strong> 
+                                                <strong>面試官：</strong>
                                                 {interview.interviewers.map((inter, i) => {
-                                                    const positionChar = inter?.position ? 
-                                                    inter.position.charAt(0) : 'N/A';
-                                                    
+                                                    const positionChar = inter?.position ? inter.position.charAt(0) : "N/A";
+
                                                     return (
                                                         <span key={`interviewer-${i}`}>
                                                             {inter.name} ({positionChar}) {i < interview.interviewers.length - 1 ? ", " : ""}
@@ -132,15 +126,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                                         </div>
                                         <div className="interview-details">
                                             <p>
-                                                <strong>應試者：</strong> 
+                                                <strong>應試者：</strong>
                                                 {interview.interviewees.map((ee, i) => {
-                                                    const positionChar = ee?.position ? 
-                                                    ee.position.charAt(0) : 'N/A';
-                                                    
+                                                    const positionChar = ee?.position ? ee.position.charAt(0) : "N/A";
+
                                                     return (
                                                         <span key={`interviewee-${i}`}>
-                                                            {ee.name} ({positionChar})
-                                                            {i < interview.interviewees.length - 1 ? ", " : ""}
+                                                            {ee.name} ({positionChar}){i < interview.interviewees.length - 1 ? ", " : ""}
                                                         </span>
                                                     );
                                                 })}
@@ -155,13 +147,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                             <p>
                                 <strong>面試官：</strong>{" "}
                                 {getAvailabilityData(date, timeSlot)
-                                    .interviewers.map((i) => `${i.name} (${i.position?.charAt(0) || 'N/A'})`)
+                                    .interviewers.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`)
                                     .join(", ") || "無"}
                             </p>
                             <p>
                                 <strong>應試者：</strong>{" "}
                                 {getAvailabilityData(date, timeSlot)
-                                    .interviewees.map((i) => `${i.name} (${i.position?.charAt(0) || 'N/A'})`)
+                                    .interviewees.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`)
                                     .join(", ") || "無"}
                             </p>
                         </div>

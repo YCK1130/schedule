@@ -1,28 +1,18 @@
-import type { ChangeEvent } from "react";
-import React, { useEffect, useState } from "react";
+import type { ChangeEvent, JSX } from "react";
+import React, { useMemo, useState } from "react";
 import { Button, Card, Col, Form, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
+import { useDataSave } from "../../contexts/DataContext";
 import { useScheduling } from "../../contexts/SchedulingContext";
 import "../../styles/restriction.css";
+import type { GroupType } from "../../types";
 import { downloadSample, handleFileUpload, loadSampleData } from "../../utils/fileUtils";
-import { getPositionsFromParticipants } from "../../utils/positionUtils";
-
+import ConstraintRow from "./ConstraintRow";
 const FileUploader: React.FC = () => {
-    const {
-        groupRestrictions,
-        updateGroupRestriction,
-        addRestriction,
-        removeRestriction,
-        onIntervieweesLoaded,
-        onInterviewersLoaded,
-        interviewers,
-        interviewees,
-    } = useScheduling();
+    const { groupRestrictions, updateGroupRestriction, addRestriction, removeRestriction } = useScheduling();
+    const { onIntervieweesLoaded, onInterviewersLoaded, positions } = useDataSave();
+
     const [interviewersFileName, setInterviewersFileName] = useState<string>("");
     const [intervieweesFileName, setIntervieweesFileName] = useState<string>("");
-    const [positions, setPositions] = useState<{ [groupId: string]: string[] }>({
-        interviewers: ["所有"],
-        interviewees: ["所有"],
-    });
 
     const handleInterviewersUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -47,97 +37,54 @@ const FileUploader: React.FC = () => {
         }
     };
 
-    // 獲取可用的職位列表
-    useEffect(() => {
-        if (interviewers.length > 0) {
-            const interviewerPositions = getPositionsFromParticipants(interviewers);
-            setPositions((prev) => ({
-                ...prev,
-                interviewers: interviewerPositions,
-            }));
-        }
+    // 使用 useMemo 緩存限制條件渲染邏輯
+    const renderedGroupRestrictions = useMemo(() => {
+        const result: Record<GroupType, JSX.Element> = {
+            interviewers: renderGroupRestriction("interviewers"),
+            interviewees: renderGroupRestriction("interviewees"),
+        };
+        return result;
+    }, [groupRestrictions, positions]);
 
-        if (interviewees.length > 0) {
-            const intervieweePositions = getPositionsFromParticipants(interviewees);
-            setPositions((prev) => ({
-                ...prev,
-                interviewees: intervieweePositions,
-            }));
-        }
-    }, [interviewers, interviewees]);
-
-    const renderGroupRestriction = (groupId: string) => (
-        <div className="restrictions-container">
-            <span className="restriction-label">{groupId === "interviewers" ? "面試官" : "應試者"} 數量條件限制</span>
-            {groupId === "interviewees" ? (
-                <div key="interviewees-same-position-constrain" className="restriction-box">
-                    <div className="restriction-row" style={{justifyContent: "center", color: "gray", fontWeight:500}}>職位相等</div>
-                </div>
-            ) : null}
-            {groupRestrictions[groupId].map((restriction, index) => (
-                <div key={index} className="restriction-box">
-                    <div className="restriction-row">
-                        <Form.Select
-                            value={restriction.targetPosition || "所有"}
-                            className="restriction-column"
-                            onChange={(e) =>
-                                updateGroupRestriction(groupId, index, {
-                                    targetPosition: e.target.value,
-                                })
-                            }
-                        >
-                            {positions[groupId].map((position) => (
-                                <option key={position} value={position}>
-                                    {position}
-                                </option>
-                            ))}
-                        </Form.Select>
-
-                        <Form.Control
-                            type="number"
-                            className="restriction-column"
-                            min="1"
-                            value={restriction.minCount}
-                            onChange={(e) =>
-                                updateGroupRestriction(groupId, index, {
-                                    minCount: parseInt(e.target.value) || 1,
-                                })
-                            }
-                            placeholder="最小數量"
-                        />
-                        <>~</>
-                        <Form.Control
-                            type="number"
-                            className="restriction-column"
-                            min="1"
-                            value={restriction.maxCount}
-                            onChange={(e) =>
-                                updateGroupRestriction(groupId, index, {
-                                    maxCount: parseInt(e.target.value) || 1,
-                                })
-                            }
-                            placeholder="最大數量"
-                        />
-
-                        <Button
-                            variant="outline-danger"
-                            size="sm"
-                            className="remove-btn"
-                            onClick={() => removeRestriction(groupId, index)}
-                        >
-                            ✕
-                        </Button>
+    // 限制條件渲染函數
+    function renderGroupRestriction(groupId: GroupType) {
+        return (
+            <div className="restrictions-container">
+                <span className="restriction-label">{groupId === "interviewers" ? "面試官" : "應試者"} 數量條件限制</span>
+                {groupId === "interviewees" ? (
+                    <div key="interviewees-same-position-constrain" className="restriction-box">
+                        <div className="restriction-row" style={{ justifyContent: "center", color: "gray", fontWeight: 500 }}>
+                            職位相等
+                        </div>
                     </div>
+                ) : null}
+                {groupRestrictions[groupId].map((restriction, index) => (
+                    <ConstraintRow
+                        key={`${index}-ConstraintRow`}
+                        index={index}
+                        groupId={groupId}
+                        restriction={restriction}
+                        positionsList={positions[groupId]}
+                        onPositionChange={(e) => updateGroupRestriction(groupId, index, { targetPosition: e.target.value })}
+                        onMinChange={(e) => {
+                            const value = parseInt(e.target.value) || 1;
+                            updateGroupRestriction(groupId, index, { minCount: value });
+                        }}
+                        onMaxChange={(e) => {
+                            const value = parseInt(e.target.value) || 1;
+                            updateGroupRestriction(groupId, index, { maxCount: value });
+                        }}
+                        removeRow={() => removeRestriction(groupId, index)}
+                    />
+                ))}
+                <div className="restriction-actions">
+                    <Button variant="outline-primary" size="sm" onClick={() => addRestriction(groupId)}>
+                        + 新增條件
+                    </Button>
                 </div>
-            ))}
-
-            <div className="restriction-actions">
-                <Button variant="outline-primary" size="sm" onClick={() => addRestriction(groupId)}>
-                    + 新增條件
-                </Button>
             </div>
-        </div>
-    );
+        );
+    }
 
     return (
         <Card className="mb-4 upload-card">
@@ -147,11 +94,13 @@ const FileUploader: React.FC = () => {
                     placement="left"
                     overlay={
                         <Tooltip>
-                            <div>您可以：</div>
-                            <ul className="mb-0 ps-3">
-                                <li>下載範例檔案格式</li>
-                                <li>直接載入範例資料試用</li>
-                            </ul>
+                            <div style={{ textAlign: "left" }}>
+                                <div>您可以：</div>
+                                <ul className="mb-0 ps-3">
+                                    <li>下載範例檔案格式</li>
+                                    <li>直接載入範例資料試用</li>
+                                </ul>
+                            </div>
                         </Tooltip>
                     }
                 >
@@ -161,7 +110,7 @@ const FileUploader: React.FC = () => {
             <Card.Body>
                 <Form className="w-100">
                     <Row className="file-upload-row">
-                        {["interviewers", "interviewees"].map((type) => (
+                        {(["interviewers", "interviewees"] as const).map((type) => (
                             <Col key={type} className="file-upload-col">
                                 <Form.Group>
                                     <div className="file-upload-header">
@@ -181,12 +130,11 @@ const FileUploader: React.FC = () => {
                                         onChange={type === "interviewers" ? handleInterviewersUpload : handleIntervieweesUpload}
                                         className="upload-input"
                                     />
-                                    {renderGroupRestriction(type)}
+                                    {renderedGroupRestrictions[type]}
                                 </Form.Group>
                             </Col>
                         ))}
                     </Row>
-
                     <div className="file-preview">
                         {interviewersFileName && (
                             <div className="preview-item">
