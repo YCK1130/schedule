@@ -10,8 +10,10 @@
   --text-color: #333333;
   --border-color: #666666;
   --default-grid-num: 7;
+  --calendar-col-width: 170px;
+  --calendar-rowHead-width: 60px;
   --calendar-grid-num: var(--default-grid-num);
-  --card-max-width: calc(150px * var(--default-grid-num) + 60px);
+  --card-max-width: calc(var(--calendar-col-width) * var(--default-grid-num) + var(--calendar-rowHead-width));
 }
 
 body {

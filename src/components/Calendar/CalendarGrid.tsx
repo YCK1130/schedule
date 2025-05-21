@@ -21,8 +21,8 @@ const CalendarGrid: React.FC = () => {
         viewMode,
         displayInfo: { startDate, daysToShow, earliestTime, latestTime },
         getSlotData,
-        preprocessedSlots,
         scheduledInterviews,
+        loading
     } = useDataSave();
 
     // 為每個面試分配一個唯一的顏色索引
@@ -179,8 +179,7 @@ const CalendarGrid: React.FC = () => {
                         </div>
                     ))}
             </div>
-
-            {!preprocessedSlots.initialized ? (
+            {loading ? (
                 <div className="loading-container">
                     <div className="spinner"></div>
                     <h3 className="loading-text">資料預處理中...</h3>

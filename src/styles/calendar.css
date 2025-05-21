@@ -43,7 +43,7 @@
 
 .calendar-grid {
   display: inline-grid;
-  grid-template-columns: 60px repeat(var(--calendar-grid-num), minmax(150px, 1fr));
+  grid-template-columns: var(--calendar-rowHead-width) repeat(var(--calendar-grid-num), minmax(var(--calendar-col-width), 1fr));
   position: relative;
   background: white;
   scrollbar-width: thin;
@@ -84,14 +84,14 @@
 
 .calendar-header {
   display: grid;
-  grid-template-columns: 60px repeat(var(--calendar-grid-num), minmax(150px, 1fr));
+  grid-template-columns: var(--calendar-rowHead-width) repeat(var(--calendar-grid-num), minmax(var(--calendar-col-width), 1fr));
   position: sticky;
   top: 0;
   z-index: 5;
   background: white;
   border-bottom: 2px solid #ddd;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  width: 150px;
+  width: var(--calendar-col-width);
   min-width: min-content;
   flex-shrink: 0;
 }
@@ -194,7 +194,7 @@
   border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
-  width: 150px;
+  width: var(--calendar-col-width);
 }
 
 .calendar-time-slot {
@@ -206,7 +206,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  width: 150px;
+  width: var(--calendar-col-width);
   padding-left: 0.25rem;
   padding-right: 0.25rem;
   border-right: 1px solid #e2e8f0;
@@ -230,12 +230,6 @@
   filter: brightness(0.95);
 }
 
-.events-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(13, 60px);
-  position: relative;
-}
 
 .interview-event {
   padding: 0.5rem;

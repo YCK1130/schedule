@@ -6,7 +6,7 @@ import CalendarHeader from "./CalendarHeader";
 import CalendarLegend from "./CalendarLegend";
 
 const AvailabilityCalendar: React.FC = () => {
-    const { scheduledInterviews, unmatchedResults, viewMode, setViewMode } = useDataSave();
+    const { scheduledInterviews, unmatchedResults, viewMode, loading, setViewMode } = useDataSave();
 
     return (
         <div className="calendar-container">
@@ -27,9 +27,9 @@ const AvailabilityCalendar: React.FC = () => {
             </div>
             <div className="calendar-main">
                 <div className="calendar-view">
-                    <div className="calendar-scroll-container">
+                    <div className={`calendar-scroll-container  ${loading ? "no-scroll" : ""}`}>
                         <CalendarHeader />
-                        <CalendarGrid scheduledInterviews={scheduledInterviews} />
+                        <CalendarGrid />
                     </div>
                 </div>
             </div>

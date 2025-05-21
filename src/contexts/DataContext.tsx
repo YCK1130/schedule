@@ -9,7 +9,7 @@ interface SlotData {
     minute: number;
     availableInterviewers: Interviewer[];
     availableInterviewees: Interviewee[];
-    scheduledInterviews: ScheduledInterview[] | null;
+    scheduledInterviews: ScheduledInterview[];
 }
 
 interface PreprocessedSlots {
@@ -41,6 +41,7 @@ interface DataSaveContextType {
     setUnmatchedResults: React.Dispatch<React.SetStateAction<UnmatchedResult | null>>;
     preprocessedSlots: PreprocessedSlots; // 新增：預處理的時間槽資料
     getSlotData: (date: Date, hour: number, minute: number) => SlotData | null; // 新增：獲取指定時間槽資料的方法
+    loading: boolean; // 新增：資料載入狀態
 }
 
 const DataSaveContext = createContext<DataSaveContextType | null>(null);
@@ -57,6 +58,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [interviewers, setInterviewers] = useState<Interviewer[]>([]);
     const [interviewees, setInterviewees] = useState<Interviewee[]>([]);
     const [scheduledInterviews, setScheduledInterviews] = useState<ScheduledInterview[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const [unmatchedResults, setUnmatchedResults] = useState<UnmatchedResult | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>("scheduled");
@@ -83,12 +85,15 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     // 預處理時間槽資料的函數
-    const preprocessSlots = () => {
+    const preprocessSlots = async () => {
+        console.log("進入預處理");
+
         if (!displayInfo || !interviewers.length || !interviewees.length) return;
-        
+        console.log("開始預處理");
+
         const newSlots = new Map<string, SlotData>();
         const { startDate, daysToShow, earliestTime, latestTime } = displayInfo;
-        
+
         // 生成所有日期
         const allDates = [];
         for (let i = 0; i < daysToShow; i++) {
@@ -96,102 +101,89 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             date.setDate(startDate.getDate() + i);
             allDates.push(date);
         }
-
+        const getSlotKey = (date: Date, hour: number, minute: number) => {
+            return `${date.toISOString().split("T")[0]}-${hour}-${minute}`;
+        };
         // 生成所有時間槽
-        allDates.forEach(date => {
+        allDates.forEach((date) => {
             for (let hour = earliestTime; hour <= latestTime; hour++) {
-                [0, 30].forEach(minute => {
+                [0, 30].forEach((minute) => {
                     const checkDate = new Date(date);
                     checkDate.setHours(hour, minute, 0, 0);
-                    
-                    // 找出此時間可用的面試官
-                    const availableInterviewers = interviewers.filter(interviewer => {
-                        if (!interviewer.availability || !Array.isArray(interviewer.availability)) return false;
-                        return interviewer.availability.some(slot => {
-                            try {
-                                if (!slot.includes("/")) return false;
-                                const [slotStart, slotEnd] = slot.split("/");
-                                const startSlotDate = new Date(slotStart);
-                                const endSlotDate = new Date(slotEnd);
-                                
-                                return (
-                                    checkDate.getTime() >= startSlotDate.getTime() &&
-                                    checkDate.getTime() < endSlotDate.getTime() &&
-                                    checkDate.toDateString() === startSlotDate.toDateString()
-                                );
-                            } catch (e) {
-                                return false;
-                            }
-                        });
-                    });
-                    
-                    // 找出此時間可用的面試者
-                    const availableInterviewees = interviewees.filter(interviewee => {
-                        if (!interviewee.availability || !Array.isArray(interviewee.availability)) return false;
-                        return interviewee.availability.some(slot => {
-                            try {
-                                if (!slot.includes("/")) return false;
-                                const [slotStart, slotEnd] = slot.split("/");
-                                const startSlotDate = new Date(slotStart);
-                                const endSlotDate = new Date(slotEnd);
-                                
-                                return (
-                                    checkDate.getTime() >= startSlotDate.getTime() &&
-                                    checkDate.getTime() < endSlotDate.getTime() &&
-                                    checkDate.toDateString() === startSlotDate.toDateString()
-                                );
-                            } catch (e) {
-                                return false;
-                            }
-                        });
-                    });
-                    
-                    // 查找此時間已排程的面試
-                    let scheduledInterview = null;
-                    if (scheduledInterviews.length > 0) {
-                        const matchedInterview = scheduledInterviews.filter(interview => {
-                            const startTime = new Date(interview.startTime);
-                            const endTime = new Date(interview.endTime);
-                            
-                            return (
-                                checkDate.getTime() >= startTime.getTime() &&
-                                checkDate.getTime() < endTime.getTime() &&
-                                startTime.getDate() === checkDate.getDate() &&
-                                startTime.getMonth() === checkDate.getMonth() &&
-                                startTime.getFullYear() === checkDate.getFullYear()
-                            );
-                        });
-                        
-                        if (matchedInterview.length > 0) {
-                            scheduledInterview = matchedInterview;
-                        }
-                    }
-                    
-                    // 生成時間槽的鍵值
-                    const key = `${date.toISOString().split('T')[0]}-${hour}-${minute}`;
-                    
-                    // 儲存這個時間槽的資料
+                    const key = getSlotKey(date, hour, minute);
                     newSlots.set(key, {
                         date: new Date(date),
                         hour,
                         minute,
-                        availableInterviewers,
-                        availableInterviewees,
-                        scheduledInterviews
+                        availableInterviewers: [],
+                        availableInterviewees: [],
+                        scheduledInterviews: [],
                     });
                 });
             }
         });
-        
+        interviewers.forEach((interviewer) => {
+            if (!interviewer.availability || !Array.isArray(interviewer.availability)) return;
+            interviewer.availability.forEach((slot) => {
+                if (!slot.includes("/") && !slot.includes(":")) return;
+                const [startTime, endTime] = slot.split("/");
+                const startDate = new Date(startTime);
+                const endDate = new Date(endTime);
+                while (startDate.getTime() < endDate.getTime()) {
+                    const sHour = startDate.getHours();
+                    const sMinute = startDate.getMinutes();
+                    const key = getSlotKey(startDate, sHour, Math.round(sMinute / 60 + 1e-3) * 30);
+                    startDate.setMinutes(startDate.getMinutes() + 30);
+                    const originalSlot = newSlots.get(key);
+                    originalSlot?.availableInterviewers.push(interviewer);
+                }
+            });
+        });
+        interviewees.forEach((interviewee) => {
+            if (!interviewee.availability || !Array.isArray(interviewee.availability)) return;
+            interviewee.availability.forEach((slot) => {
+                if (!slot.includes("/") && !slot.includes(":")) return;
+                const [startTime, endTime] = slot.split("/");
+                const startDate = new Date(startTime);
+                const endDate = new Date(endTime);
+                while (startDate.getTime() < endDate.getTime()) {
+                    const sHour = startDate.getHours();
+                    const sMinute = startDate.getMinutes();
+                    const key = getSlotKey(startDate, sHour, Math.round(sMinute / 60 + 1e-3) * 30);
+                    startDate.setMinutes(startDate.getMinutes() + 30);
+                    const originalSlot = newSlots.get(key);
+                    originalSlot?.availableInterviewees.push(interviewee);
+                }
+            });
+        });
+        scheduledInterviews.forEach((interview) => {
+            const startTime = new Date(interview.startTime);
+            const endTime = new Date(interview.endTime);
+
+            while (startTime.getTime() < endTime.getTime()) {
+                const sHour = startTime.getHours();
+                const sMinute = startTime.getMinutes();
+                const key = getSlotKey(startTime, sHour, Math.round(sMinute / 60 + 1e-3) * 30);
+                startTime.setMinutes(startTime.getMinutes() + 30);
+                const originalSlot = newSlots.get(key);
+                if (originalSlot) {
+                    originalSlot.scheduledInterviews.push(interview);
+                }
+            }
+        });
+
         setPreprocessedSlots({
             byDateAndTime: newSlots,
-            initialized: true
+            initialized: true,
         });
+        console.log("預處理時間槽完成", newSlots);
+        setLoading(false);
     };
 
     // 當資料或排程更新時，重新預處理所有時間槽
     useEffect(() => {
         if (interviewers.length > 0 && interviewees.length > 0 && displayInfo) {
+            setLoading(true);
             preprocessSlots();
         }
     }, [interviewers, interviewees, displayInfo, scheduledInterviews]);
@@ -331,6 +323,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 setScheduledInterviews,
                 preprocessedSlots,
                 getSlotData,
+                loading,
             }}
         >
             {children}
