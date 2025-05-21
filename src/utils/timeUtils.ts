@@ -148,16 +148,3 @@ export const formatTimeRange = (startTime: string, endTime: string) => {
         time: `${startHours}:${startMinutes} ~ ${endHours}:${endMinutes}`,
     };
 };
-
-/**
- * 判斷指定時間是否在時間槽範圍內
- */
-export const isTimeInSlot = (checkTime: Date, timeSlot: string): boolean => {
-    if (!timeSlot.includes("/")) return false;
-    
-    const [start, end] = timeSlot.split("/");
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    
-    return checkTime >= startDate && checkTime < endDate;
-};

@@ -330,6 +330,8 @@
   color: #333 !important;
   z-index: 1500 !important;
   text-align: left !important;
+  width: max-content;
+  --bs-tooltip-max-width: var(--tooltip-max-width) !important;
   min-width: 200px !important;
 }
 
@@ -338,6 +340,10 @@
   text-align: left;
 }
 
+.tooltip-content {
+  width: max-content;
+  max-width: var(--tooltip-max-width);
+}
 /* 防止 tooltip 造成的版面跳動 */
 .tooltip {
   pointer-events: none;
@@ -444,9 +450,7 @@
   line-height: 1.4;
 }
 
-.tooltip-content {
-  max-width: 300px;
-}
+
 
 @keyframes fadeIn {
   from {

@@ -14,6 +14,7 @@
   --calendar-rowHead-width: 60px;
   --calendar-grid-num: var(--default-grid-num);
   --card-max-width: calc(var(--calendar-col-width) * var(--default-grid-num) + var(--calendar-rowHead-width));
+  --tooltip-max-width: 600px;
 }
 
 body {

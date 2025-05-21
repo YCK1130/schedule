@@ -20,4 +20,24 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': 'require-corp',
     },
   },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'bootstrap-ui': ['react-bootstrap'],
+          'utils': [
+            './src/utils/calendar.ts', 
+            './src/utils/schedulerUtils.ts', 
+            './src/utils/timeUtils.ts'
+          ],
+          'scheduler-algos': [
+            './src/utils/algos/greedy.ts', 
+            './src/utils/algos/schedule.ts'
+          ]
+        }
+      }
+    }
+  }
 })

@@ -1,9 +1,19 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Button, ButtonGroup } from "react-bootstrap";
 import { useDataSave } from "../../contexts/DataContext";
-import CalendarGrid from "./CalendarGrid";
-import CalendarHeader from "./CalendarHeader";
-import CalendarLegend from "./CalendarLegend";
+
+// 使用懶加載載入日曆元件
+const CalendarHeader = lazy(() => import("./CalendarHeader"));
+const CalendarGrid = lazy(() => import("./CalendarGrid"));
+const CalendarLegend = lazy(() => import("./CalendarLegend"));
+
+// 加載中元件
+const LoadingComponent = () => (
+  <div className="loading-container" style={{ gridColumn: '1 / -1', height: '200px' }}>
+    <div className="spinner"></div>
+    <h3 className="loading-text">日曆載入中...</h3>
+  </div>
+);
 
 const AvailabilityCalendar: React.FC = () => {
     const { scheduledInterviews, unmatchedResults, viewMode, loading, setViewMode } = useDataSave();
@@ -27,14 +37,18 @@ const AvailabilityCalendar: React.FC = () => {
             </div>
             <div className="calendar-main">
                 <div className="calendar-view">
-                    <div className={`calendar-scroll-container  ${loading ? "no-scroll" : ""}`}>
-                        <CalendarHeader />
-                        <CalendarGrid />
+                    <div className={`calendar-scroll-container ${loading ? "no-scroll" : ""}`}>
+                        <Suspense fallback={<LoadingComponent />}>
+                            <CalendarHeader />
+                            <CalendarGrid />
+                        </Suspense>
                     </div>
                 </div>
             </div>
             <div className="calendar-footer">
-                <CalendarLegend isScheduleView={viewMode === "scheduled" && scheduledInterviews.length > 0} />
+                <Suspense fallback={<div className="p-2">載入中...</div>}>
+                    <CalendarLegend isScheduleView={viewMode === "scheduled" && scheduledInterviews.length > 0} />
+                </Suspense>
             </div>
         </div>
     );

@@ -35,28 +35,6 @@ export const generateTimeSlots = (earliestTime: number, latestTime: number): str
 };
 
 /**
- * 檢查給定的時間是否在時間槽範圍內
- */
-export const isTimeInSlot = (checkDate: Date, availabilitySlot: string): boolean => {
-    try {
-        if (!availabilitySlot.includes("/")) return false;
-
-        const [slotStart, slotEnd] = availabilitySlot.split("/");
-        const startDate = new Date(slotStart);
-        const endDate = new Date(slotEnd);
-
-        return (
-            checkDate.getTime() >= startDate.getTime() &&
-            checkDate.getTime() < endDate.getTime() &&
-            checkDate.toDateString() === startDate.toDateString()
-        );
-    } catch (e) {
-        console.error("時間格式錯誤:", e);
-        return false;
-    }
-};
-
-/**
  * 為每個面試分配一個唯一的顏色索引
  */
 export const generateInterviewColorMap = (scheduledInterviews: ScheduledInterview[]): Map<string, number> => {

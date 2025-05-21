@@ -303,6 +303,8 @@ export function parseInterviewers(data: any[]): Interviewer[] {
         name: row.name,
         email: row.email,
         availability: parseAvailability(row.availability), // 直接返回陣列
+        origin_availability: parseAvailability(row.availability), // 直接返回陣列
+        input_availability: parseAvailability(row.availability), // 直接返回陣列
         specialization: row.specialization,
     }));
 }
@@ -315,6 +317,8 @@ export function parseInterviewees(data: any[]): Interviewee[] {
         position: row.position || row.positionApplied,
         positionApplied: row.positionApplied || row.position,
         availability: parseAvailability(row.availability), // 直接返回陣列
+        origin_availability: parseAvailability(row.availability), // 直接返回陣列
+        input_availability: parseAvailability(row.availability), // 直接返回陣列
     }));
 }
 

@@ -19,7 +19,7 @@ const CalendarGrid: React.FC = () => {
         displayInfo: { startDate, daysToShow, earliestTime, latestTime },
         getSlotData,
         scheduledInterviews,
-        loading
+        loading,
     } = useDataSave();
 
     // 為每個面試分配一個唯一的顏色索引
@@ -94,7 +94,7 @@ const CalendarGrid: React.FC = () => {
         const targetInterview = getTimeSlotInterviewsWithPreprocess(date, timeSlot, targets, interviewColors);
 
         // 在 "scheduled" 模式下且沒有面試，則不顯示 tooltip
-        if (viewMode === "scheduled" && targets.length > 0 && targetInterview.length === 0) {
+        if (viewMode === "scheduled" && targets.length >= 0 && targetInterview.length === 0) {
             return (
                 <Tooltip>
                     <div key={`${date}-tooltip`} style={{ display: "none" }}></div>
@@ -108,10 +108,7 @@ const CalendarGrid: React.FC = () => {
                     {viewMode === "scheduled" && targets.length > 0 ? (
                         targetInterview.map((interview) => {
                             return (
-                                <div
-                                    key={`${interview.interviewees[0].id}-${interview.startTime}-interview-details`}
-                                    className="interview-details"
-                                >
+                                <div key={`${interview.interviewees[0].id}-${interview.startTime}-interview-details`} className="interview-details">
                                     <div
                                         key={`${interview.interviewees[0].id}-${interview.startTime}-interview-slot`}
                                         className="interview-slot"
