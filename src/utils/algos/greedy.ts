@@ -59,7 +59,11 @@ export const optimizedGreedyMatching = (
         }
         intervieweesByPosition[position].push(interviewee);
     });
-
+    validInterviewers.forEach((interviewer) => {
+        if (interviewer.origin_availability) {
+            interviewer.availability = interviewer.origin_availability
+        }
+    });
     // 為每個職位組的應試者分配面試時間
     for (const position in intervieweesByPosition) {
 
@@ -133,11 +137,7 @@ export const optimizedGreedyMatching = (
         }
     }
     
-    validInterviewers.forEach((interviewer) => {
-        if (interviewer.origin_availability) {
-            interviewer.availability = interviewer.origin_availability
-        }
-    });
+    
     // 標記所有未分配的應試者
     const unmatchedInterviewees = validInterviewees.filter((interviewee) => !assignedIntervieweeIds.has(interviewee.id));
 

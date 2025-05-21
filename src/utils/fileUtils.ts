@@ -1,3 +1,4 @@
+import { cloneDeep } from "lodash";
 import Papa from "papaparse";
 import { v4 as uuid } from "uuid";
 import * as XLSX from "xlsx";
@@ -14,10 +15,15 @@ export const formatData = (data: any[]): any[] => {
             const mappedKey = colMapping.get(key.toLowerCase());
 
             // 處理不同格式的時間輸入
-            if (mappedKey === "availability" && typeof item[key] === "string") {
+            if (mappedKey === "availability") {
                 // 處理類似 "7/31 20:00 - 21:00" 的格式
-                formattedItem[mappedKey] = formatTimeSlots(item[key]);
-                formattedItem[`origin_${mappedKey}`] = item[key];
+                if (typeof item[key] === "string") {
+                    formattedItem[mappedKey] = formatTimeSlots(item[key]);
+                } else {
+                    formattedItem[mappedKey] = item[key];
+                }
+                formattedItem["origin_availability"] = cloneDeep(formattedItem[mappedKey]);
+                formattedItem["input_availability"] = cloneDeep(item[key]);
             } else if (mappedKey) {
                 formattedItem[mappedKey] = item[key];
             }
@@ -109,11 +115,7 @@ export const downloadSample = (type: string): void => {
 /**
  * 載入範例資料
  */
-export const loadSampleData = async (
-    type: string,
-    setFileName: (name: string) => void,
-    onDataLoaded: (data: any[]) => void
-): Promise<void> => {
+export const loadSampleData = async (type: string, setFileName: (name: string) => void, onDataLoaded: (data: any[]) => void): Promise<void> => {
     const mapping: Map<string, string> = new Map([
         ["interviewers", "/schedule/samples/real/interview_schedule_interviewers.csv"],
         ["interviewees", "/schedule/samples/real/interview_schedule_interviewees.csv"],

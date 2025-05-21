@@ -11,9 +11,7 @@ export const prepareParticipantData = (
     participants: Interviewer[] | Interviewee[],
     scheduledInterviews: ScheduledInterview[]
 ) => {
-    const filteredInterviews = scheduledInterviews.filter(
-        (interview) => interview[isInterviewer ? "interviewers" : "interviewees"].length > 0
-    );
+    const filteredInterviews = scheduledInterviews.filter((interview) => interview[isInterviewer ? "interviewers" : "interviewees"].length > 0);
 
     return participants.map((participant) => {
         // 查找此人參與的所有面試
@@ -41,7 +39,7 @@ export const prepareParticipantData = (
                 timeMap.set(`id_${idx + 1}`, id);
             });
         }
-        
+
         // 將參與者的基本信息與參與的面試時間合併
         return {
             name: participant.name,
@@ -58,9 +56,9 @@ export const prepareParticipantData = (
  * 將面試資料匯出為 CSV
  */
 export const exportToCsv = (
-    exportType: string, 
-    scheduledInterviews: ScheduledInterview[], 
-    interviewers: Interviewer[], 
+    exportType: string,
+    scheduledInterviews: ScheduledInterview[],
+    interviewers: Interviewer[],
     interviewees: Interviewee[]
 ): void => {
     if (scheduledInterviews.length === 0) return;
@@ -78,7 +76,7 @@ export const exportToCsv = (
                 position: interview.interviewees[0].position,
                 ...formatTimeRange(interview.startTime, interview.endTime),
             }));
-            
+
             csvContent = Papa.unparse(
                 interviewsData
                     .map((r) => ({
@@ -113,7 +111,7 @@ export const exportToCsv = (
                 });
                 return acc;
             }, [] as { name: string; position: string; date: string; time: string; id: number }[]);
-            
+
             csvContent = Papa.unparse(
                 flatData
                     .map((r) => ({
@@ -131,7 +129,7 @@ export const exportToCsv = (
         case "interviewees":
             // 匯出應試者數據
             const intervieweesData = prepareParticipantData(false, interviewees, scheduledInterviews);
-            
+
             csvContent = Papa.unparse(
                 intervieweesData
                     .map((r) => ({
@@ -146,14 +144,14 @@ export const exportToCsv = (
             );
             fileName = "interviewees_schedule.csv";
             break;
-            
+
         case "interviewers_stats":
             const interviewersStatsData = prepareParticipantData(true, interviewers, scheduledInterviews);
             const flatStatsData = interviewersStatsData.map((curr) => {
                 const { name, position, timeSlotsNum } = curr;
                 return { name, position, num: timeSlotsNum };
             });
-            
+
             csvContent = Papa.unparse(
                 flatStatsData
                     .map((r) => ({
@@ -175,25 +173,25 @@ export const exportToCsv = (
  * 獲取應試者的可用時間
  */
 export const getAvailableTime = (interviewee: Interviewee): string => {
-    if (interviewee.origin_availability) {
-        if (Array.isArray(interviewee.origin_availability)) {
-            return interviewee.origin_availability
-                .map((slot) => {
-                    const { date, time } = formatTimeRange(slot.split("/")[0], slot.split("/")[1]);
-                    return `${date} ${time}`;
-                })
-                .join(", ");
-        } else {
-            return interviewee.origin_availability;
-        }
-    } else if (Array.isArray(interviewee.availability)) {
-        return interviewee.availability
+    console.log("interviewee", interviewee);
+    if (Array.isArray(interviewee.input_availability)) {
+        return interviewee.input_availability
             .map((slot) => {
                 const { date, time } = formatTimeRange(slot.split("/")[0], slot.split("/")[1]);
                 return `${date} ${time}`;
             })
             .join(", ");
     } else {
-        return interviewee.availability as string || "";
+        return interviewee.input_availability;
     }
+    // } else if (Array.isArray(interviewee.availability)) {
+    //     return interviewee.availability
+    //         .map((slot) => {
+    //             const { date, time } = formatTimeRange(slot.split("/")[0], slot.split("/")[1]);
+    //             return `${date} ${time}`;
+    //         })
+    //         .join(", ");
+    // } else {
+    //     return interviewee.availability;
+    // }
 };

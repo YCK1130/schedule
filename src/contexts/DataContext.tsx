@@ -59,7 +59,6 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [interviewees, setInterviewees] = useState<Interviewee[]>([]);
     const [scheduledInterviews, setScheduledInterviews] = useState<ScheduledInterview[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
-
     const [unmatchedResults, setUnmatchedResults] = useState<UnmatchedResult | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>("scheduled");
     // 新增：用來存儲日期和時間範圍的計算結果
@@ -84,13 +83,15 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         interviewees: interviewees.length > 0,
     };
 
-    // 預處理時間槽資料的函數
+    const getSlotKey = (date: Date, hour: number, minute: number) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}-${String(hour).padStart(2, "0")}-${String(minute).padStart(2, "0")}`;
+    };
     const preprocessSlots = async () => {
-        console.log("進入預處理");
-
-        if (!displayInfo || !interviewers.length || !interviewees.length) return;
-        console.log("開始預處理");
-
+        const profilerStart = performance.now();
+        console.debug("進入預處理");
         const newSlots = new Map<string, SlotData>();
         const { startDate, daysToShow, earliestTime, latestTime } = displayInfo;
 
@@ -101,10 +102,6 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             date.setDate(startDate.getDate() + i);
             allDates.push(date);
         }
-        const getSlotKey = (date: Date, hour: number, minute: number) => {
-            return `${date.toISOString().split("T")[0]}-${hour}-${minute}`;
-        };
-        // 生成所有時間槽
         allDates.forEach((date) => {
             for (let hour = earliestTime; hour <= latestTime; hour++) {
                 [0, 30].forEach((minute) => {
@@ -112,7 +109,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     checkDate.setHours(hour, minute, 0, 0);
                     const key = getSlotKey(date, hour, minute);
                     newSlots.set(key, {
-                        date: new Date(date),
+                        date: new Date(checkDate),
                         hour,
                         minute,
                         availableInterviewers: [],
@@ -159,7 +156,6 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         scheduledInterviews.forEach((interview) => {
             const startTime = new Date(interview.startTime);
             const endTime = new Date(interview.endTime);
-
             while (startTime.getTime() < endTime.getTime()) {
                 const sHour = startTime.getHours();
                 const sMinute = startTime.getMinutes();
@@ -176,19 +172,16 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             byDateAndTime: newSlots,
             initialized: true,
         });
-        console.log("預處理時間槽完成", newSlots);
+        const profilerEnd = performance.now();
+        console.debug("預處理時間槽完成, 耗時:", profilerEnd - profilerStart, "毫秒");
         setLoading(false);
     };
 
-    // 當資料或排程更新時，重新預處理所有時間槽
     useEffect(() => {
-        if (interviewers.length > 0 && interviewees.length > 0 && displayInfo) {
-            setLoading(true);
-            preprocessSlots();
-        }
+        setLoading(true);
+        preprocessSlots();
     }, [interviewers, interviewees, displayInfo, scheduledInterviews]);
 
-    // 只在資料載入時計算一次日期和時間範圍
     useEffect(() => {
         if (interviewers.length === 0 && interviewees.length === 0) return;
 
@@ -252,7 +245,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             earliestTime,
             latestTime: latestTime + 1,
         });
-    }, [interviewers.length, interviewees.length]);
+    }, [interviewers, interviewees]);
 
     const onIntervieweesLoaded = (data: Interviewee[]) => {
         const processedData = data.map((interviewee) => {
@@ -301,7 +294,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     const getSlotData = (date: Date, hour: number, minute: number): SlotData | null => {
-        const key = `${date.toISOString().split("T")[0]}-${hour}-${minute}`;
+        const key = getSlotKey(date, hour, minute);
         return preprocessedSlots.byDateAndTime.get(key) || null;
     };
 

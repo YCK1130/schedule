@@ -11,9 +11,6 @@ import {
     getTimeSlotInterviewsWithPreprocess,
 } from "../../utils/calendar";
 import CalendarTimeSlot from "./CalendarTimeSlot";
-// interface CalendarGridProps {
-//     scheduledInterviews: ScheduledInterview[];
-// }
 
 const CalendarGrid: React.FC = () => {
     const {
@@ -42,7 +39,6 @@ const CalendarGrid: React.FC = () => {
 
         if (!slotData) {
             return {
-                interview: undefined,
                 interviewersNum: 0,
                 intervieweesNum: 0,
                 interviewersNames: "",
@@ -68,7 +64,7 @@ const CalendarGrid: React.FC = () => {
 
         // 如果是已排程視圖並且有面試安排
         if (viewMode === "scheduled" && scheduled && scheduled.length > 0) {
-            const interview = getTimeSlotInterviews(date, timeSlot, scheduled, interviewColors)[0];
+            const interview = getTimeSlotInterviews(date, timeSlot, scheduled, interviewColors);
             return {
                 interview,
                 interviewersNum: 0,
@@ -79,7 +75,6 @@ const CalendarGrid: React.FC = () => {
         }
 
         return {
-            interview: undefined,
             interviewersNum: relevantInterviewers.length,
             intervieweesNum: relevantInterviewees.length,
             interviewersNames: relevantInterviewers.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", "),
@@ -96,7 +91,6 @@ const CalendarGrid: React.FC = () => {
 
         let { scheduledInterviews: targets } = slotData ? slotData : { scheduledInterviews: [] as ScheduledInterview[] };
         if (!targets) targets = [];
-
         const targetInterview = getTimeSlotInterviewsWithPreprocess(date, timeSlot, targets, interviewColors);
 
         // 在 "scheduled" 模式下且沒有面試，則不顯示 tooltip
@@ -115,11 +109,11 @@ const CalendarGrid: React.FC = () => {
                         targetInterview.map((interview) => {
                             return (
                                 <div
-                                    key={`${interview.interviewees.map((idx) => idx.id)[0]}-${interview.startTime}-interview-details`}
+                                    key={`${interview.interviewees[0].id}-${interview.startTime}-interview-details`}
                                     className="interview-details"
                                 >
                                     <div
-                                        key={`${interview.interviewees.map((idx) => idx.id)[0]}-${interview.startTime}-interview-slot`}
+                                        key={`${interview.interviewees[0].id}-${interview.startTime}-interview-slot`}
                                         className="interview-slot"
                                         style={{
                                             borderLeft: `3px solid ${getInterviewColor(interview.colorIndex)}`,
@@ -189,7 +183,6 @@ const CalendarGrid: React.FC = () => {
                     <div key={`column-${dateIndex}`} className="day-column">
                         {timeSlots.map((timeSlot, timeIndex) => {
                             const availabilityData = getAvailabilityData(date, timeSlot);
-
                             return (
                                 <OverlayTrigger
                                     key={`overlay-${dateIndex}-${timeIndex}`}

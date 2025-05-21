@@ -82,7 +82,7 @@ export const SchedulingProvider: React.FC<{
             return;
         }
         const result = scheduleInterviews(interviewers, interviewees, checkResult.results);
-
+        console.debug("排程結果：", result);
         setScheduledInterviews(result.interviews);
         setUnmatchedResults(result.unmatched);
     };

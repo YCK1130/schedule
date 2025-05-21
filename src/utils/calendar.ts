@@ -17,7 +17,8 @@ export const getDates = (startDate: Date, num: number) => {
  * 獲取面試顏色（根據索引）
  */
 export const getInterviewColor = (index: number): string => {
-    const colors = ["#4299e1", "#48bb78", "#ed8936", "#667eea", "#ed64a6", "#48bb78", "#4299e1", "#9f7aea"];
+    const colors = ["#4299E1B3", "#48BB78B3", "#ED8936B3", "#667EEAB3", "#ED64A6B3", "#F6AD55B3", "#81E6D9B3", "#9F7AEAB3"];
+    // const colors = ["#4299e1", "#48bb78", "#ed8936", "#667eea", "#ed64a6", "#48bb78", "#4299e1", "#9f7aea"];
     return colors[index % colors.length];
 };
 
@@ -39,7 +40,7 @@ export const generateTimeSlots = (earliestTime: number, latestTime: number): str
 export const isTimeInSlot = (checkDate: Date, availabilitySlot: string): boolean => {
     try {
         if (!availabilitySlot.includes("/")) return false;
-        
+
         const [slotStart, slotEnd] = availabilitySlot.split("/");
         const startDate = new Date(slotStart);
         const endDate = new Date(slotEnd);
@@ -61,7 +62,7 @@ export const isTimeInSlot = (checkDate: Date, availabilitySlot: string): boolean
 export const generateInterviewColorMap = (scheduledInterviews: ScheduledInterview[]): Map<string, number> => {
     const colorMap = new Map<string, number>();
     scheduledInterviews.forEach((interview, index) => {
-        const interviewKey = `${interview.interviewees.map(idx => idx.id).join("-")}-${interview.startTime}`;
+        const interviewKey = `${interview.interviewees.map((idx) => idx.id).join("-")}-${interview.startTime}`;
         colorMap.set(interviewKey, index % 8); // 最多使用8種顏色循環
     });
     return colorMap;
@@ -71,9 +72,9 @@ export const generateInterviewColorMap = (scheduledInterviews: ScheduledIntervie
  * 獲取給定日期和時間槽的面試
  */
 export const getTimeSlotInterviews = (
-    date: Date, 
-    timeSlot: string, 
-    scheduledInterviews: ScheduledInterview[], 
+    date: Date,
+    timeSlot: string,
+    scheduledInterviews: ScheduledInterview[],
     interviewColors: Map<string, number>
 ) => {
     const [hours, minutes] = timeSlot.split(":");
@@ -104,7 +105,7 @@ export const getTimeSlotInterviews = (
             const isEnd = currentSlotTime === endTime.getTime() - slotDuration;
 
             // 使用面試唯一識別符來確定顏色
-            const interviewKey = `${interview.interviewees.map(idx => idx.id).join("-")}-${interview.startTime}`;
+            const interviewKey = `${interview.interviewees.map((idx) => idx.id).join("-")}-${interview.startTime}`;
             const colorIndex = interviewColors.get(interviewKey) || 0;
 
             return {
@@ -120,9 +121,9 @@ export const getTimeSlotInterviews = (
  * 獲取給定日期和時間槽的面試
  */
 export const getTimeSlotInterviewsWithPreprocess = (
-    date: Date, 
-    timeSlot: string, 
-    preprocessedScheduledInterviews: ScheduledInterview[], 
+    date: Date,
+    timeSlot: string,
+    preprocessedScheduledInterviews: ScheduledInterview[],
     interviewColors: Map<string, number>
 ) => {
     const [hours, minutes] = timeSlot.split(":");
@@ -133,21 +134,21 @@ export const getTimeSlotInterviewsWithPreprocess = (
     const slotDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
 
     return preprocessedScheduledInterviews.map((interview) => {
-            const startTime = new Date(interview.startTime);
-            const endTime = new Date(interview.endTime);
+        const startTime = new Date(interview.startTime);
+        const endTime = new Date(interview.endTime);
 
-            const isStart = currentSlotTime === startTime.getTime();
-            const isEnd = currentSlotTime === endTime.getTime() - slotDuration;
+        const isStart = currentSlotTime === startTime.getTime();
+        const isEnd = currentSlotTime === endTime.getTime() - slotDuration;
 
-            // 使用面試唯一識別符來確定顏色
-            const interviewKey = `${interview.interviewees.map(idx => idx.id).join("-")}-${interview.startTime}`;
-            const colorIndex = interviewColors.get(interviewKey) || 0;
+        // 使用面試唯一識別符來確定顏色
+        const interviewKey = `${interview.interviewees.map((idx) => idx.id).join("-")}-${interview.startTime}`;
+        const colorIndex = interviewColors.get(interviewKey) || 0;
 
-            return {
-                ...interview,
-                isStart,
-                isEnd,
-                colorIndex,
-            };
-        });
+        return {
+            ...interview,
+            isStart,
+            isEnd,
+            colorIndex,
+        };
+    });
 };

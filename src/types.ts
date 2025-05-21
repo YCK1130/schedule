@@ -3,7 +3,8 @@ export interface Interviewer {
     name: string;
     email: string;
     availability: string[] | string;
-    origin_availability?: string[] | string;
+    origin_availability: string[] | string;
+    input_availability: string[] | string;
     position?: string;
     specialization?: string;
     select_count?: number;
@@ -15,7 +16,8 @@ export interface Interviewee {
     email: string;
     position: string;
     availability: string[] | string;
-    origin_availability?: string[] | string;
+    origin_availability: string[] | string;
+    input_availability: string[] | string;
     select_count?: number;
 }
 
