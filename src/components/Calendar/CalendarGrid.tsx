@@ -1,20 +1,28 @@
 import React, { useLayoutEffect, useMemo } from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useDataSave } from "../../contexts/DataContext";
-import type { Interviewee, Interviewer, ScheduledInterview } from "../../types";
-import { generateInterviewColorMap, generateTimeSlots, getDates, getInterviewColor, getTimeSlotInterviews, isTimeInSlot } from "../../utils/calendar";
+import type { ScheduledInterview } from "../../types";
+import {
+    generateInterviewColorMap,
+    generateTimeSlots,
+    getDates,
+    getInterviewColor,
+    getTimeSlotInterviews,
+    getTimeSlotInterviewsWithPreprocess,
+} from "../../utils/calendar";
 import CalendarTimeSlot from "./CalendarTimeSlot";
-interface CalendarGridProps {
-    scheduledInterviews: ScheduledInterview[];
-}
+// interface CalendarGridProps {
+//     scheduledInterviews: ScheduledInterview[];
+// }
 
-const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
+const CalendarGrid: React.FC = () => {
     const {
-        interviewers,
-        interviewees,
         unmatchedResults,
         viewMode,
         displayInfo: { startDate, daysToShow, earliestTime, latestTime },
+        getSlotData,
+        preprocessedSlots,
+        scheduledInterviews,
     } = useDataSave();
 
     // 為每個面試分配一個唯一的顏色索引
@@ -24,60 +32,75 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
     const timeSlots = useMemo(() => generateTimeSlots(earliestTime, latestTime), [earliestTime, latestTime]);
 
     const getAvailabilityData = (date: Date, timeSlot: string) => {
-        if (viewMode === "scheduled" && scheduledInterviews.length > 0) {
+        // 從時間槽字符串解析小時和分鐘
+        const [hours, minutes] = timeSlot.split(":");
+        const hour = parseInt(hours, 10);
+        const minute = parseInt(minutes, 10);
+
+        // 使用預處理資料
+        const slotData = getSlotData(date, hour, minute);
+
+        if (!slotData) {
             return {
-                interview: getTimeSlotInterviews(date, timeSlot, scheduledInterviews, interviewColors)[0],
+                interview: undefined,
                 interviewersNum: 0,
                 intervieweesNum: 0,
+                interviewersNames: "",
+                intervieweesNames: "",
             };
         }
 
-        const [hours, minutes] = timeSlot.split(":");
-        const checkDate = new Date(date);
-        checkDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        // 從預處理資料中取出相關資訊
+        const { availableInterviewers, availableInterviewees, scheduledInterviews: scheduled } = slotData;
 
-        // 根據視圖模式選擇不同的人員列表
-        let relevantInterviewers: Interviewer[] = interviewers;
-        let relevantInterviewees: Interviewee[] = interviewees;
+        // 根據視圖模式過濾資料
+        let relevantInterviewers = availableInterviewers;
+        let relevantInterviewees = availableInterviewees;
 
         if (viewMode === "unmatched" && unmatchedResults) {
-            relevantInterviewers = unmatchedResults.interviewers;
-            relevantInterviewees = unmatchedResults.interviewees;
+            // 如果是「未排程」視圖，只顯示未匹配的面試官和面試者
+            const unmatchedInterviewerIds = new Set(unmatchedResults.interviewers.map((i) => i.id));
+            const unmatchedIntervieweeIds = new Set(unmatchedResults.interviewees.map((i) => i.id));
+
+            relevantInterviewers = availableInterviewers.filter((i) => unmatchedInterviewerIds.has(i.id));
+            relevantInterviewees = availableInterviewees.filter((i) => unmatchedIntervieweeIds.has(i.id));
         }
 
-        // 確保 interviewer.availability 是數組
-        const availableInterviewers =
-            relevantInterviewers?.filter((interviewer) => {
-                // 安全檢查：確保 availability 存在且是數組
-                if (!interviewer.availability || !Array.isArray(interviewer.availability)) {
-                    console.warn(`面試官 ${interviewer.name} 的 availability 不是有效數組`, interviewer.availability);
-                    return false;
-                }
-                return interviewer.availability.some((slot) => isTimeInSlot(checkDate, slot));
-            }) || [];
+        // 如果是已排程視圖並且有面試安排
+        if (viewMode === "scheduled" && scheduled && scheduled.length > 0) {
+            const interview = getTimeSlotInterviews(date, timeSlot, scheduled, interviewColors)[0];
+            return {
+                interview,
+                interviewersNum: 0,
+                intervieweesNum: 0,
+                interviewersNames: "",
+                intervieweesNames: "",
+            };
+        }
 
-        const availableInterviewees =
-            relevantInterviewees?.filter((interviewee) => {
-                // 安全檢查：確保 availability 存在且是數組
-                if (!interviewee.availability || !Array.isArray(interviewee.availability)) {
-                    console.warn(`應試者 ${interviewee.name} 的 availability 不是有效數組`, interviewee.availability);
-                    return false;
-                }
-                return interviewee.availability.some((slot) => isTimeInSlot(checkDate, slot));
-            }) || [];
         return {
-            interviewersNum: availableInterviewers.length,
-            interviewersNames: availableInterviewers.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", "),
-            intervieweesNum: availableInterviewees.length,
-            intervieweesNames: availableInterviewees.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", "),
+            interview: undefined,
+            interviewersNum: relevantInterviewers.length,
+            intervieweesNum: relevantInterviewees.length,
+            interviewersNames: relevantInterviewers.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", "),
+            intervieweesNames: relevantInterviewees.map((i) => `${i.name} (${i.position?.charAt(0) || "N/A"})`).join(", "),
         };
     };
 
     const renderTooltip = (date: Date, timeSlot: string) => {
-        const targetInterview = getTimeSlotInterviews(date, timeSlot, scheduledInterviews, interviewColors);
+        // 從時間槽字符串解析小時和分鐘
+        const [hours, minutes] = timeSlot.split(":");
+        const hour = parseInt(hours, 10);
+        const minute = parseInt(minutes, 10);
+        const slotData = getSlotData(date, hour, minute);
+
+        let { scheduledInterviews: targets } = slotData ? slotData : { scheduledInterviews: [] as ScheduledInterview[] };
+        if (!targets) targets = [];
+
+        const targetInterview = getTimeSlotInterviewsWithPreprocess(date, timeSlot, targets, interviewColors);
 
         // 在 "scheduled" 模式下且沒有面試，則不顯示 tooltip
-        if (viewMode === "scheduled" && scheduledInterviews.length > 0 && targetInterview.length === 0) {
+        if (viewMode === "scheduled" && targets.length > 0 && targetInterview.length === 0) {
             return (
                 <Tooltip>
                     <div key={`${date}-tooltip`} style={{ display: "none" }}></div>
@@ -88,7 +111,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
         return (
             <Tooltip className="availability-tooltip">
                 <div className="tooltip-content">
-                    {viewMode === "scheduled" && scheduledInterviews.length > 0 ? (
+                    {viewMode === "scheduled" && targets.length > 0 ? (
                         targetInterview.map((interview) => {
                             return (
                                 <div
@@ -157,29 +180,36 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ scheduledInterviews }) => {
                     ))}
             </div>
 
-            {getDates(startDate, daysToShow).map((date, dateIndex) => (
-                <div key={`column-${dateIndex}`} className="day-column">
-                    {timeSlots.map((timeSlot, timeIndex) => {
-                        const availabilityData = getAvailabilityData(date, timeSlot);
-
-                        return (
-                            <OverlayTrigger
-                                key={`overlay-${dateIndex}-${timeIndex}`}
-                                placement="auto"
-                                delay={{ show: 50, hide: 100 }}
-                                overlay={renderTooltip(date, timeSlot)}
-                            >
-                                <div className="time-slot-wrapper" key={`slot-${dateIndex}-${timeIndex}`}>
-                                    <CalendarTimeSlot
-                                        availability={availabilityData}
-                                        showSchedule={viewMode === "scheduled" && scheduledInterviews.length > 0}
-                                    />
-                                </div>
-                            </OverlayTrigger>
-                        );
-                    })}
+            {!preprocessedSlots.initialized ? (
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <h3 className="loading-text">資料預處理中...</h3>
                 </div>
-            ))}
+            ) : (
+                getDates(startDate, daysToShow).map((date, dateIndex) => (
+                    <div key={`column-${dateIndex}`} className="day-column">
+                        {timeSlots.map((timeSlot, timeIndex) => {
+                            const availabilityData = getAvailabilityData(date, timeSlot);
+
+                            return (
+                                <OverlayTrigger
+                                    key={`overlay-${dateIndex}-${timeIndex}`}
+                                    placement="auto"
+                                    delay={{ show: 50, hide: 100 }}
+                                    overlay={renderTooltip(date, timeSlot)}
+                                >
+                                    <div className="time-slot-wrapper" key={`slot-${dateIndex}-${timeIndex}`}>
+                                        <CalendarTimeSlot
+                                            availability={availabilityData}
+                                            showSchedule={viewMode === "scheduled" && scheduledInterviews.length > 0}
+                                        />
+                                    </div>
+                                </OverlayTrigger>
+                            );
+                        })}
+                    </div>
+                ))
+            )}
         </div>
     );
 };

@@ -115,3 +115,39 @@ export const getTimeSlotInterviews = (
             };
         });
 };
+
+/**
+ * 獲取給定日期和時間槽的面試
+ */
+export const getTimeSlotInterviewsWithPreprocess = (
+    date: Date, 
+    timeSlot: string, 
+    preprocessedScheduledInterviews: ScheduledInterview[], 
+    interviewColors: Map<string, number>
+) => {
+    const [hours, minutes] = timeSlot.split(":");
+    const checkDate = new Date(date);
+    checkDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+
+    const currentSlotTime = checkDate.getTime();
+    const slotDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+    return preprocessedScheduledInterviews.map((interview) => {
+            const startTime = new Date(interview.startTime);
+            const endTime = new Date(interview.endTime);
+
+            const isStart = currentSlotTime === startTime.getTime();
+            const isEnd = currentSlotTime === endTime.getTime() - slotDuration;
+
+            // 使用面試唯一識別符來確定顏色
+            const interviewKey = `${interview.interviewees.map(idx => idx.id).join("-")}-${interview.startTime}`;
+            const colorIndex = interviewColors.get(interviewKey) || 0;
+
+            return {
+                ...interview,
+                isStart,
+                isEnd,
+                colorIndex,
+            };
+        });
+};
