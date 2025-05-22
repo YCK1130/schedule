@@ -26,6 +26,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
+          'xlsx': ['xlsx'],
           'bootstrap-ui': ['react-bootstrap'],
           'utils': [
             './src/utils/calendar.ts', 
