@@ -1,6 +1,6 @@
 import { saveAs } from "file-saver";
 import Papa from "papaparse";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 import type { Interviewee, Interviewer, ScheduledInterview } from "../types";
 import { formatTimeRange } from "./timeUtils";
 
@@ -48,7 +48,7 @@ export const prepareParticipantData = (
             email: participant.email || "",
             timeMap: timeMap,
             timeSlotsNum: timeSlots.length,
-            origin_availability: participant.origin_availability,
+            input_availability: participant.input_availability,
         };
     });
 };
@@ -139,7 +139,7 @@ export const exportToCsv = (
                         日期: r.timeMap.get("date"),
                         面試時間: r.timeMap.get("time"),
                         面試場次編號: r.timeMap.get("id"),
-                        可面試時間: r.origin_availability,
+                        可面試時間: r.input_availability,
                     }))
                     .sort((a, b) => a.姓名.localeCompare(b.姓名))
             );
@@ -183,9 +183,9 @@ export const exportToXlsx = (
 
     // 創建新的工作簿
     const workbook = XLSX.utils.book_new();
-    
+
     // 匯出面試數據
-    if (exportTypes.includes('interviews')) {
+    if (exportTypes.includes("interviews")) {
         const interviewsData = scheduledInterviews.map((interview) => ({
             interviewers: interview.interviewers.map((int) => int.name).join(", "),
             interviewees: interview.interviewees.map((int) => int.name).join(", "),
@@ -207,11 +207,11 @@ export const exportToXlsx = (
 
         // 創建工作表
         const worksheet = XLSX.utils.json_to_sheet(formattedData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, '面試場次安排表');
+        XLSX.utils.book_append_sheet(workbook, worksheet, "面試場次安排表");
     }
 
     // 匯出面試官各場次數據
-    if (exportTypes.includes('interviewers')) {
+    if (exportTypes.includes("interviewers")) {
         const interviewersData = prepareParticipantData(true, interviewers, scheduledInterviews);
         const flatData = interviewersData.reduce((acc, curr) => {
             const { name, position, timeMap } = curr;
@@ -240,11 +240,11 @@ export const exportToXlsx = (
 
         // 創建工作表
         const worksheet = XLSX.utils.json_to_sheet(formattedData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, '面試官各場次安排');
+        XLSX.utils.book_append_sheet(workbook, worksheet, "面試官各場次安排");
     }
 
     // 匯出面試官統計數據
-    if (exportTypes.includes('interviewers_stats')) {
+    if (exportTypes.includes("interviewers_stats")) {
         const interviewersStatsData = prepareParticipantData(true, interviewers, scheduledInterviews);
         const flatStatsData = interviewersStatsData.map((curr) => {
             const { name, position, timeSlotsNum } = curr;
@@ -261,33 +261,33 @@ export const exportToXlsx = (
 
         // 創建工作表
         const worksheet = XLSX.utils.json_to_sheet(formattedData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, '面試官場次統計');
+        XLSX.utils.book_append_sheet(workbook, worksheet, "面試官場次統計");
     }
 
     // 匯出應試者數據
-    if (exportTypes.includes('interviewees')) {
+    if (exportTypes.includes("interviewees")) {
         const intervieweesData = prepareParticipantData(false, interviewees, scheduledInterviews);
 
         const formattedData = intervieweesData
             .map((r) => ({
                 姓名: r.name,
                 職位: r.position,
-                日期: r.timeMap.get("date"),
-                面試時間: r.timeMap.get("time"),
-                面試場次編號: r.timeMap.get("id"),
-                可面試時間: r.origin_availability,
+                日期: r.timeMap.get("date") || "配對失敗",
+                面試時間: r.timeMap.get("time") || "配對失敗",
+                面試場次編號: r.timeMap.get("id") || "配對失敗",
+                可面試時間: r.input_availability,
             }))
             .sort((a, b) => a.姓名.localeCompare(b.姓名));
 
         // 創建工作表
         const worksheet = XLSX.utils.json_to_sheet(formattedData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, '應試者面試安排');
+        XLSX.utils.book_append_sheet(workbook, worksheet, "應試者面試安排");
     }
 
     // 寫入緩衝區並下載
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(blob, '面試安排總表.xlsx');
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, "面試安排總表.xlsx");
 };
 
 /**
@@ -301,6 +301,6 @@ export const getAvailableTime = (interviewee: Interviewee): string => {
                 return `${date} ${time}`;
             })
             .join(", ");
-    } 
+    }
     return interviewee.input_availability;
 };
