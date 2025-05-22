@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import type { GroupType, Interviewee, Interviewer, ScheduledInterview, UnmatchedResult, ViewMode } from "../types";
 import { getPositionsFromParticipants } from "../utils/positionUtils";
 
-// 定義預處理時間槽的介面
 interface SlotData {
     date: Date;
     hour: number;
@@ -39,9 +38,10 @@ interface DataSaveContextType {
     setScheduledInterviews: React.Dispatch<React.SetStateAction<ScheduledInterview[]>>;
     unmatchedResults: UnmatchedResult | null;
     setUnmatchedResults: React.Dispatch<React.SetStateAction<UnmatchedResult | null>>;
-    preprocessedSlots: PreprocessedSlots; // 新增：預處理的時間槽資料
-    getSlotData: (date: Date, hour: number, minute: number) => SlotData | null; // 新增：獲取指定時間槽資料的方法
-    loading: boolean; // 新增：資料載入狀態
+    preprocessedSlots: PreprocessedSlots;
+    getSlotData: (date: Date, hour: number, minute: number) => SlotData | null;
+    loading: boolean;
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const DataSaveContext = createContext<DataSaveContextType | null>(null);
@@ -317,6 +317,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 preprocessedSlots,
                 getSlotData,
                 loading,
+                setLoading,
             }}
         >
             {children}

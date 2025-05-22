@@ -79,6 +79,7 @@ const FileUploader: React.FC = () => {
                             }
                         }}
                         removeRow={() => removeRestriction(groupId, index)}
+                        disableDelelete={groupRestrictions[groupId].length <= 1}
                     />
                 ))}
                 <div className="restriction-actions">

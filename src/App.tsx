@@ -9,16 +9,22 @@ const SchedulingContainer = lazy(() => import("./containers/SchedulingContainer"
 
 // 載入指示元件
 const LoadingFallback = () => (
-  <div className="loading-container">
-    <div className="spinner"></div>
-    <h3 className="loading-text">載入中...</h3>
-  </div>
+    <div className="loading-container">
+        <div className="spinner"></div>
+        <h3 className="loading-text">載入中...</h3>
+    </div>
 );
 
 const UseDataSchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { interviewers, interviewees, setScheduledInterviews, setUnmatchedResults } = useDataSave();
+    const { interviewers, interviewees, setScheduledInterviews, setUnmatchedResults, setLoading } = useDataSave();
     return (
-        <SchedulingProvider interviewees={interviewees} interviewers={interviewers} setScheduledInterviews={setScheduledInterviews} setUnmatchedResults={setUnmatchedResults}>
+        <SchedulingProvider
+            interviewees={interviewees}
+            interviewers={interviewers}
+            setScheduledInterviews={setScheduledInterviews}
+            setUnmatchedResults={setUnmatchedResults}
+            setLoading={setLoading}
+        >
             {children}
         </SchedulingProvider>
     );

@@ -13,6 +13,7 @@ interface ConstraintRowProps {
     onMinChange: (value: number | null) => void;
     onMaxChange: (value: number | null) => void;
     removeRow: () => void;
+    disableDelelete?: boolean;
 }
 
 const ConstraintRow: React.FC<ConstraintRowProps> = ({
@@ -24,6 +25,7 @@ const ConstraintRow: React.FC<ConstraintRowProps> = ({
     onMinChange,
     onMaxChange,
     removeRow,
+    disableDelelete,
 }) => {
     // 本地狀態用於存儲輸入值，支援暫時為空的狀態
     const [minValue, setMinValue] = useState<string>(restriction.minCount?.toString() || "");
@@ -65,7 +67,6 @@ const ConstraintRow: React.FC<ConstraintRowProps> = ({
                         setMinValue("1");
                         onMinChange(1);
                     } else {
-                        console.log( numValue);
                         onMinChange(numValue);
                     }
                 }
@@ -143,7 +144,7 @@ const ConstraintRow: React.FC<ConstraintRowProps> = ({
                     placeholder="最大數量"
                 />
 
-                <Button variant="outline-danger" size="sm" className="remove-btn" onClick={removeRow}>
+                <Button variant="outline-danger" size="sm" className="remove-btn" onClick={removeRow} disabled={disableDelelete}>
                     ✕
                 </Button>
             </div>

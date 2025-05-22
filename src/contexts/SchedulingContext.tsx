@@ -29,7 +29,8 @@ export const SchedulingProvider: React.FC<{
     interviewees: Interviewee[];
     setScheduledInterviews: React.Dispatch<React.SetStateAction<ScheduledInterview[]>>;
     setUnmatchedResults: React.Dispatch<React.SetStateAction<UnmatchedResult | null>>;
-}> = ({ children, interviewers, interviewees, setScheduledInterviews, setUnmatchedResults }) => {
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+}> = ({ children, interviewers, interviewees, setScheduledInterviews, setUnmatchedResults, setLoading }) => {
     const restrictionResultsRef = useRef<{
         results: Map<string, { min: number; max: number }>;
         lastUpdated: number;
@@ -82,10 +83,24 @@ export const SchedulingProvider: React.FC<{
             console.error("群組限制檢查失敗：", checkResult.conflict);
             return;
         }
-        const result = scheduleInterviews(interviewers, interviewees, checkResult.results);
-        console.debug("排程結果：", result);
-        setScheduledInterviews(result.interviews);
-        setUnmatchedResults(result.unmatched);
+        
+        console.debug("開始排程...");
+        setLoading(true);
+        
+        // 使用 setTimeout 將計算過程放到下一個事件迴圈，使 React 有機會先渲染 loading 狀態
+        setTimeout(() => {
+            try {
+                const result = scheduleInterviews(interviewers, interviewees, checkResult.results);
+                console.debug("排程結果：", result);
+                setScheduledInterviews(result.interviews);
+                setUnmatchedResults(result.unmatched);
+            } catch (error) {
+                console.error("排程過程中發生錯誤:", error);
+            } finally {
+                setLoading(false);
+                console.debug("排程完成");
+            }
+        }, 0);
     };
 
     const updateGroupRestriction = (groupId: string, restrictionIndex: number, restriction: Partial<GroupRestriction>) => {
@@ -99,23 +114,25 @@ export const SchedulingProvider: React.FC<{
             const updatedRestrictions = prev[groupId].map((r, i) => {
                 if (i === restrictionIndex) {
                     const updatedRestriction = { ...r };
-                    
+
                     // 處理 minCount 和 maxCount 的 null 值
                     // 當暫時為 null 時，保留原值；若有明確的新值則更新
                     Object.keys(restriction).forEach((key) => {
                         const typedKey = key as keyof GroupRestriction;
-                        if ((typedKey === 'minCount' || typedKey === 'maxCount') && 
-                            restriction[typedKey] !== null && 
-                            restriction[typedKey] !== undefined) {
+                        if (
+                            (typedKey === "minCount" || typedKey === "maxCount") &&
+                            restriction[typedKey] !== null &&
+                            restriction[typedKey] !== undefined
+                        ) {
                             // 確保值不是 null 或 undefined
                             // TypeScript 現在知道值不是 null 或 undefined
                             updatedRestriction[typedKey] = restriction[typedKey] as number;
-                        } else if (typedKey !== 'minCount' && typedKey !== 'maxCount') {
+                        } else if (typedKey !== "minCount" && typedKey !== "maxCount") {
                             // 處理非數值屬性
                             updatedRestriction[typedKey] = restriction[typedKey] as any;
                         }
                     });
-                    
+
                     return updatedRestriction;
                 }
                 return r;

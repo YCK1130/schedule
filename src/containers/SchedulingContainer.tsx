@@ -6,7 +6,7 @@ import { useScheduling } from "../contexts/SchedulingContext";
 
 const SchedulingContainer: React.FC = () => {
     const { generateSchedule } = useScheduling();
-    const { scheduledInterviews, dataLoaded } = useDataSave();
+    const { scheduledInterviews, dataLoaded, loading } = useDataSave();
 
     const allDataLoaded = dataLoaded.interviewers && dataLoaded.interviewees;
 
@@ -21,7 +21,13 @@ const SchedulingContainer: React.FC = () => {
                 <Row className="fix-width-container">
                     <Col className="text-end">
                         <button className="continue-btn" onClick={generateSchedule}>
-                            {scheduledInterviews.length > 0 ? "重新配對 🔄" : "開始配對 ▶"}
+                            {loading ? (
+                                <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                            ) : scheduledInterviews.length > 0 ? (
+                                "重新配對 🔄"
+                            ) : (
+                                "開始配對 ▶"
+                            )}
                         </button>
                     </Col>
                 </Row>
