@@ -1,5 +1,20 @@
 import type { GroupRestriction, Interviewee, Interviewer, ScheduledInterview } from "../types";
 
+// 定義預處理的資料結構介面
+export interface SlotData {
+    date: Date;
+    hour: number;
+    minute: number;
+    availableInterviewers: Interviewer[];
+    availableInterviewees: Interviewee[];
+    scheduledInterviews: ScheduledInterview[];
+}
+
+export interface PreprocessedSlots {
+    byDateAndTime: Map<string, SlotData>;
+    initialized: boolean;
+}
+
 export interface ScheduleResult {
     interviews: ScheduledInterview[];
     unmatched: {

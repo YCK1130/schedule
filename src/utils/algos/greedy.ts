@@ -1,11 +1,12 @@
 import type { Interviewee, Interviewer, ScheduledInterview } from "../../types";
+import type { PreprocessedSlots } from "../schedulerUtils";
 import { checkRestrictions, getAllTimeSlots, isTimeSlotAvailable, parseTimeSlot } from "../schedulerUtils";
-
 // 優化的貪婪算法
 export const optimizedGreedyMatching = (
     interviewers: Interviewer[],
     interviewees: Interviewee[],
-    groupRestrictions: Map<string, { min: number; max: number }>
+    groupRestrictions: Map<string, { min: number; max: number }>,
+    preprocessedSlots?: PreprocessedSlots
 ) => {
     // 先確保所有時間段格式正確
     const unmatched = {
@@ -16,6 +17,7 @@ export const optimizedGreedyMatching = (
     const interviews: ScheduledInterview[] = [];
     const validInterviewers = interviewers.filter((interviewer) => interviewer.availability.length > 0);
     const validInterviewees = interviewees.filter((interviewee) => interviewee.availability.length > 0);
+    
     // 如果沒有有效的面試官或應試者，直接返回
     if (validInterviewers.length === 0 || validInterviewees.length === 0) {
         // 將所有無效的面試官和應試者標記為未匹配
@@ -38,14 +40,57 @@ export const optimizedGreedyMatching = (
     }
 
     // 收集所有可能的時間段
-    const allTimeSlots = getAllTimeSlots(interviewers, interviewees);
+    let allTimeSlots = getAllTimeSlots(interviewers, interviewees);
 
-    // 按時間順序排序時間段
-    allTimeSlots.sort((a, b) => {
-        const timeA = parseTimeSlot(a).start;
-        const timeB = parseTimeSlot(b).start;
-        return timeA.getTime() - timeB.getTime();
-    });
+    // 使用預處理資料來排序時間段（按照可用人數從少到多）
+    if (preprocessedSlots && preprocessedSlots.initialized) {
+        console.debug("使用預處理資料來排序時間段");
+        
+        // 計算每個時間段的可用人數，並用於排序
+        allTimeSlots=allTimeSlots.sort((a, b) => {
+            const slotAData = getSlotDataForTimeSlot(a, preprocessedSlots);
+            const slotBData = getSlotDataForTimeSlot(b, preprocessedSlots);
+            
+            const availableForSlotA = (slotAData?.availableInterviewers.length || 0) + (slotAData?.availableInterviewees.length || 0);
+            const availableForSlotB = (slotBData?.availableInterviewers.length || 0) + (slotBData?.availableInterviewees.length || 0);
+            
+            // 優先安排可用人數最少的時間段
+            if (availableForSlotA !== availableForSlotB) {
+                return availableForSlotA - availableForSlotB; // 升序排列，可用人數少的優先
+            }
+            
+            // 如果可用人數相同，則按照時間順序排序
+            const timeA = parseTimeSlot(a).start;
+            const timeB = parseTimeSlot(b).start;
+            return timeA.getTime() - timeB.getTime();
+        });
+    } else {
+        // 如果沒有預處理資料，則使用原始的排序邏輯
+        allTimeSlots= allTimeSlots.sort((a, b) => {
+            // 計算每個時間段的可用人數（面試官 + 應試者）
+            const availableForSlotA = validInterviewers.filter(interviewer => 
+                isTimeSlotAvailable(interviewer, a, interviews)
+            ).length + validInterviewees.filter(interviewee => 
+                isTimeSlotAvailable(interviewee, a, interviews)
+            ).length;
+            
+            const availableForSlotB = validInterviewers.filter(interviewer => 
+                isTimeSlotAvailable(interviewer, b, interviews)
+            ).length + validInterviewees.filter(interviewee => 
+                isTimeSlotAvailable(interviewee, b, interviews)
+            ).length;
+            
+            // 優先安排可用人數最少的時間段
+            if (availableForSlotA !== availableForSlotB) {
+                return availableForSlotA - availableForSlotB; // 升序排列，可用人數少的優先
+            }
+            
+            // 如果可用人數相同，則按照時間順序排序
+            const timeA = parseTimeSlot(a).start;
+            const timeB = parseTimeSlot(b).start;
+            return timeA.getTime() - timeB.getTime();
+        });
+    }
 
     // 追蹤已分配的應試者
     const assignedIntervieweeIds = new Set<string>();
@@ -61,28 +106,59 @@ export const optimizedGreedyMatching = (
     });
     validInterviewers.forEach((interviewer) => {
         if (interviewer.origin_availability) {
-            interviewer.availability = interviewer.origin_availability
+            interviewer.availability = interviewer.origin_availability;
         }
     });
+    
     // 為每個職位組的應試者分配面試時間
     for (const position in intervieweesByPosition) {
-
         // 開始為每個時間段分配面試
         for (const timeSlot of allTimeSlots) {
-            // 尋找這個時間段可用的應試者（同一職位且尚未分配）
-            const positionInterviewees = intervieweesByPosition[position];
-            const availableInterviewees = positionInterviewees.filter(
-                (interviewee) =>
-                    isTimeSlotAvailable(interviewee, timeSlot, interviews) &&
-                    // !unmatched.interviewees.includes(interviewee) &&
-                    !assignedIntervieweeIds.has(interviewee.id)
-            );
+            // 使用預處理資料來快速獲取這個時間段可用的應試者
+            let availableInterviewees: Interviewee[] = [];
+            
+            if (preprocessedSlots && preprocessedSlots.initialized) {
+                const slotData = getSlotDataForTimeSlot(timeSlot, preprocessedSlots);
+                if (slotData) {
+                    // 過濾出符合條件的應試者（同職位且未分配）
+                    availableInterviewees = slotData.availableInterviewees.filter(
+                        (interviewee) => 
+                            (interviewee.position === position || position === "未指定") && 
+                            !assignedIntervieweeIds.has(interviewee.id)
+                    );
+                }
+            } else {
+                // 使用原始邏輯
+                const positionInterviewees = intervieweesByPosition[position];
+                availableInterviewees = positionInterviewees.filter(
+                    (interviewee) =>
+                        isTimeSlotAvailable(interviewee, timeSlot, interviews) &&
+                        !assignedIntervieweeIds.has(interviewee.id)
+                );
+            }
 
             // 如果沒有可用的應試者，跳過這個時間段
             if (availableInterviewees.length === 0) continue;
 
-            // 尋找這個時間段可用的面試官
-            const availableInterviewers = validInterviewers.filter((interviewer) => isTimeSlotAvailable(interviewer, timeSlot, interviews));
+            // 使用預處理資料來快速獲取這個時間段可用的面試官
+            let availableInterviewers: Interviewer[] = [];
+            
+            if (preprocessedSlots && preprocessedSlots.initialized) {
+                const slotData = getSlotDataForTimeSlot(timeSlot, preprocessedSlots);
+                if (slotData) {
+                    availableInterviewers = slotData.availableInterviewers.filter(interviewer => 
+                        !interviews.some(interview => {
+                            const slot = `${interview.startTime}/${interview.endTime}`;
+                            return isOverlappingTimeSlot(slot, timeSlot) && interview.interviewers.some(i => i.id === interviewer.id);
+                        })
+                    );
+                }
+            } else {
+                // 使用原始邏輯
+                availableInterviewers = validInterviewers.filter((interviewer) => 
+                    isTimeSlotAvailable(interviewer, timeSlot, interviews)
+                );
+            }
 
             const result = checkRestrictions(groupRestrictions, availableInterviewers, availableInterviewees, interviews);
 
@@ -90,6 +166,7 @@ export const optimizedGreedyMatching = (
                 unmatched.reasons.push(result.reason);
                 continue;
             }
+            
             // 創建面試安排
             const [startTime, endTime] = timeSlot.split("/");
             const interview: ScheduledInterview = {
@@ -110,18 +187,35 @@ export const optimizedGreedyMatching = (
                     interviewer.availability = interviewer.availability.filter((slot) => slot !== timeSlot);
                 }
             });
-
         }
     }
     
     // 填滿可以填滿的 interviews
     for (const inter of interviews) {
         const ints = inter.interviewers.map((i) => i.id);
-        // 尋找這個時間段可用的應試者（同一職位且尚未分配）
+        // 尋找這個時間段可用的面試官
+        const timeSlot = `${inter.startTime}/${inter.endTime}`;
+        
+        let availableInters: Interviewer[] = [];
+        
+        if (preprocessedSlots && preprocessedSlots.initialized) {
+            const slotData = getSlotDataForTimeSlot(timeSlot, preprocessedSlots);
+            if (slotData) {
+                availableInters = slotData.availableInterviewers.filter(interviewer => 
+                    !ints.includes(interviewer.id) && 
+                    !interviews.some(interview => {
+                        if (interview === inter) return false; // 跳過當前面試
+                        const slot = `${interview.startTime}/${interview.endTime}`;
+                        return isOverlappingTimeSlot(slot, timeSlot) && interview.interviewers.some(i => i.id === interviewer.id);
+                    })
+                );
+            }
+        } else {
+            availableInters = validInterviewers.filter(
+                (interviewer) => isTimeSlotAvailable(interviewer, timeSlot, interviews.filter(iv => iv !== inter)) && !ints.includes(interviewer.id)
+            );
+        }
 
-        const availableInters = validInterviewers.filter(
-            (interviewer) => isTimeSlotAvailable(interviewer, `${inter.startTime}/${inter.endTime}`, interviews) && !ints.includes(interviewer.id)
-        );
         const existPosition = Array.from(groupRestrictions.keys())
             .map((i) => i.split(":")[1])
             .filter((i) => i !== "所有");
@@ -137,7 +231,6 @@ export const optimizedGreedyMatching = (
         }
     }
     
-    
     // 標記所有未分配的應試者
     const unmatchedInterviewees = validInterviewees.filter((interviewee) => !assignedIntervieweeIds.has(interviewee.id));
 
@@ -148,16 +241,6 @@ export const optimizedGreedyMatching = (
         }
     });
 
-    // 標記所有未分配的面試官
-    // const assignedInterviewerIds = new Set(interviews.flatMap((i) => i.interviewers.map((j) => j.id)));
-    // const unmatchedInterviewers = validInterviewers //.filter((interviewer) => !assignedInterviewerIds.has(interviewer.id));
-
-    // unmatchedInterviewers.forEach((interviewer) => {
-    //     if (!unmatched.interviewers.includes(interviewer)) {
-    //         unmatched.interviewers.push(interviewer);
-    //         unmatched.reasons.push(`面試官 ${interviewer.name} 未被安排任何面試`);
-    //     }
-    // });
     return {
         interviews: interviews.map((interview, id) => ({ ...interview, id: id + 1 })),
         unmatched: {
@@ -167,3 +250,41 @@ export const optimizedGreedyMatching = (
         },
     };
 };
+
+// 檢查兩個時間段是否重疊的輔助函數
+function isOverlappingTimeSlot(slot1: string, slot2: string): boolean {
+    try {
+        const [start1, end1] = slot1.split("/");
+        const [start2, end2] = slot2.split("/");
+        
+        const startDate1 = new Date(start1);
+        const endDate1 = new Date(end1);
+        const startDate2 = new Date(start2);
+        const endDate2 = new Date(end2);
+        
+        return startDate1 < endDate2 && startDate2 < endDate1;
+    } catch (error) {
+        console.error("解析時間段失敗:", slot1, slot2, error);
+        return false;
+    }
+}
+
+// 從預處理資料中獲取特定時間段的資料
+function getSlotDataForTimeSlot(timeSlot: string, preprocessedSlots: PreprocessedSlots) {
+    try {
+        const [startTime] = timeSlot.split("/");
+        const startDate = new Date(startTime);
+        
+        const year = startDate.getFullYear();
+        const month = String(startDate.getMonth() + 1).padStart(2, "0");
+        const day = String(startDate.getDate()).padStart(2, "0");
+        const hour = String(startDate.getHours()).padStart(2, "0");
+        const minute = String(Math.round(startDate.getMinutes() / 30) * 30).padStart(2, "0");
+        
+        const key = `${year}-${month}-${day}-${hour}-${minute}`;
+        return preprocessedSlots.byDateAndTime.get(key);
+    } catch (error) {
+        console.error("從預處理資料獲取時間段資料失敗:", timeSlot, error);
+        return null;
+    }
+}

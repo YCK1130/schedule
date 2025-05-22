@@ -1,11 +1,11 @@
 import React from "react";
-import { getInterviewColor } from "../../utils/calendar";
 interface TimeSlotProps {
     availability: {
         interview?: {
             startTime: string;
             endTime: string;
-            colorIndex: number;
+            colorIndex?: number;
+            color: string;
             isStart: boolean;
             isEnd: boolean;
         }[];
@@ -40,7 +40,7 @@ const ScheduleTimeSlot: React.FC<TimeSlotProps> = ({ availability }) => {
     if (!interview || interview.length === 0) {
         return null;
     }
-    const key = `ScheduleTimeSlot-${interview[0].startTime}`;
+    const key = `ScheduleTimeSlot-${interview[0].startTime}-${interview[0].endTime}`;
     return (
         <div key={`${key}-calendar-time-slot`} className={`calendar-time-slot ${interview[0].isStart ? "pt-2" : interview[0].isEnd ? "pb-2" : ""}`}>
             {interview.map((interviewItem) => {
@@ -50,10 +50,10 @@ const ScheduleTimeSlot: React.FC<TimeSlotProps> = ({ availability }) => {
                 } else if (interviewItem.isEnd) {
                     sty = { borderRadius: "0 0 2px 2px" };
                 }
-                sty = {...sty, backgroundColor: `${getInterviewColor(interviewItem.colorIndex)}`};
+                sty = {...sty, backgroundColor: `${interviewItem.color}`, };
                 return (
                     <div
-                        key={`${key}-interview-block-${interviewItem.colorIndex}`}
+                        key={`${key}-interview-block-${interviewItem.colorIndex}-${interviewItem.color}`}
                         className={`interview-block mx-2`}
                         style={sty as React.CSSProperties}
                     >

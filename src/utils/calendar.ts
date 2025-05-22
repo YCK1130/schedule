@@ -33,15 +33,57 @@ export const generateTimeSlots = (earliestTime: number, latestTime: number): str
     }
     return slots;
 };
+function adjustColor(input: string, amount: number): string {
+    let r,
+        g,
+        b,
+        a = 1;
+
+    if (input.startsWith("#")) {
+        let hex = input.slice(1);
+
+        if (hex.length === 3) {
+            hex = hex
+                .split("")
+                .map((c) => c + c)
+                .join("");
+        }
+
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+    } else if (input.startsWith("rgb")) {
+        const match = input.match(/rgba?\(([^)]+)\)/);
+        const values = (match ? match[1] : ",,").split(",").map((v) => parseFloat(v.trim()));
+
+        [r, g, b] = values;
+        if (values.length === 4) {
+            a = values[3];
+        }
+    } else {
+        throw new Error("Unsupported color format");
+    }
+
+    // 调整亮度，clamp 到 0~255
+    r = Math.min(255, Math.max(0, r + amount));
+    g = Math.min(255, Math.max(0, g + amount));
+    b = Math.min(255, Math.max(0, b + amount));
+
+    if (a < 1) {
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+    } else {
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+}
 
 /**
  * 為每個面試分配一個唯一的顏色索引
  */
-export const generateInterviewColorMap = (scheduledInterviews: ScheduledInterview[]): Map<string, number> => {
-    const colorMap = new Map<string, number>();
+export const generateInterviewColorMap = (scheduledInterviews: ScheduledInterview[]): Map<string, string> => {
+    const colorMap = new Map<string, string>();
     scheduledInterviews.forEach((interview, index) => {
         const interviewKey = `${interview.interviewees.map((idx) => idx.id).join("-")}-${interview.startTime}`;
-        colorMap.set(interviewKey, index % 8); // 最多使用8種顏色循環
+        colorMap.set(interviewKey, adjustColor(getInterviewColor(Math.floor(Date.parse(interview.startTime) / 997 / 101e5+index)), 10*(index%10-5))); // 最多使用8種顏色循環
     });
     return colorMap;
 };
@@ -53,7 +95,7 @@ export const getTimeSlotInterviews = (
     date: Date,
     timeSlot: string,
     scheduledInterviews: ScheduledInterview[],
-    interviewColors: Map<string, number>
+    interviewColors: Map<string, string>
 ) => {
     const [hours, minutes] = timeSlot.split(":");
     const checkDate = new Date(date);
@@ -84,13 +126,13 @@ export const getTimeSlotInterviews = (
 
             // 使用面試唯一識別符來確定顏色
             const interviewKey = `${interview.interviewees.map((idx) => idx.id).join("-")}-${interview.startTime}`;
-            const colorIndex = interviewColors.get(interviewKey) || 0;
+            const color = interviewColors.get(interviewKey) || getInterviewColor(0);
 
             return {
                 ...interview,
                 isStart,
                 isEnd,
-                colorIndex,
+                color,
             };
         });
 };
@@ -102,7 +144,7 @@ export const getTimeSlotInterviewsWithPreprocess = (
     date: Date,
     timeSlot: string,
     preprocessedScheduledInterviews: ScheduledInterview[],
-    interviewColors: Map<string, number>
+    interviewColors: Map<string, string>
 ) => {
     const [hours, minutes] = timeSlot.split(":");
     const checkDate = new Date(date);
@@ -120,13 +162,13 @@ export const getTimeSlotInterviewsWithPreprocess = (
 
         // 使用面試唯一識別符來確定顏色
         const interviewKey = `${interview.interviewees.map((idx) => idx.id).join("-")}-${interview.startTime}`;
-        const colorIndex = interviewColors.get(interviewKey) || 0;
+        const color = interviewColors.get(interviewKey) || getInterviewColor(0);
 
         return {
             ...interview,
             isStart,
             isEnd,
-            colorIndex,
+            color,
         };
     });
 };

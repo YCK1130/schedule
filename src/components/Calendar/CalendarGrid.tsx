@@ -6,9 +6,8 @@ import {
     generateInterviewColorMap,
     generateTimeSlots,
     getDates,
-    getInterviewColor,
     getTimeSlotInterviews,
-    getTimeSlotInterviewsWithPreprocess,
+    getTimeSlotInterviewsWithPreprocess
 } from "../../utils/calendar";
 import CalendarTimeSlot from "./CalendarTimeSlot";
 
@@ -57,9 +56,9 @@ const CalendarGrid: React.FC = () => {
             // 如果是「未排程」視圖，只顯示未匹配的面試官和面試者
             const unmatchedInterviewerIds = new Set(unmatchedResults.interviewers.map((i) => i.id));
             const unmatchedIntervieweeIds = new Set(unmatchedResults.interviewees.map((i) => i.id));
-
             relevantInterviewers = availableInterviewers.filter((i) => unmatchedInterviewerIds.has(i.id));
             relevantInterviewees = availableInterviewees.filter((i) => unmatchedIntervieweeIds.has(i.id));
+            // console.debug("unmatched",relevantInterviewees)
         }
 
         // 如果是已排程視圖並且有面試安排
@@ -101,7 +100,6 @@ const CalendarGrid: React.FC = () => {
                 </Tooltip>
             );
         }
-
         return (
             <Tooltip className="availability-tooltip">
                 <div className="tooltip-content">
@@ -113,7 +111,7 @@ const CalendarGrid: React.FC = () => {
                                         key={`${interview.interviewees[0].id}-${interview.startTime}-interview-slot`}
                                         className="interview-slot"
                                         style={{
-                                            borderLeft: `3px solid ${getInterviewColor(interview.colorIndex)}`,
+                                            borderLeft: `3px solid ${interview.color}`,
                                             margin: "8px 0",
                                             padding: "8px",
                                             color: "#000",

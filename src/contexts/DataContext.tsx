@@ -119,6 +119,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 });
             }
         });
+        console.debug("所有時間槽:", newSlots);
         interviewers.forEach((interviewer) => {
             if (!interviewer.availability || !Array.isArray(interviewer.availability)) return;
             interviewer.availability.forEach((slot) => {

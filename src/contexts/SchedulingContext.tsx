@@ -2,6 +2,7 @@ import React, { createContext, useContext, useRef, useState } from "react";
 import type { GroupRestriction, Interviewee, Interviewer, ScheduledInterview, UnmatchedResult } from "../types";
 import { scheduleInterviews } from "../utils/algos/schedule";
 import { checkConflict } from "../utils/schedulerUtils";
+import { useDataSave } from "./DataContext";
 
 interface SchedulingContextType {
     groupRestrictions: {
@@ -38,6 +39,7 @@ export const SchedulingProvider: React.FC<{
         results: new Map(),
         lastUpdated: 0,
     });
+    const { preprocessedSlots } = useDataSave();
 
     // 使用一個新的狀態來儲存多個限制條件
     const [groupRestrictions, setGroupRestrictions] = useState<{
@@ -90,7 +92,7 @@ export const SchedulingProvider: React.FC<{
         // 使用 setTimeout 將計算過程放到下一個事件迴圈，使 React 有機會先渲染 loading 狀態
         setTimeout(() => {
             try {
-                const result = scheduleInterviews(interviewers, interviewees, checkResult.results);
+                const result = scheduleInterviews(interviewers, interviewees, checkResult.results, preprocessedSlots);
                 console.debug("排程結果：", result);
                 setScheduledInterviews(result.interviews);
                 setUnmatchedResults(result.unmatched);
