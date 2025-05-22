@@ -1,6 +1,6 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/CalendarHeader-CBMXKTAu.js","assets/bootstrap-ui-DwpW4YAL.js","assets/react-vendor-Csw2ODfV.js","assets/index-V5tylbtI.js","assets/scheduler-algos-DuZM4aA3.js","assets/utils-ClevuSU5.js","assets/index-wVXifvhx.css","assets/CalendarGrid-CJOrpqb_.js","assets/CalendarLegend-CHTpk66n.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/CalendarHeader-BmB5Fptw.js","assets/bootstrap-ui-DwpW4YAL.js","assets/react-vendor-Csw2ODfV.js","assets/index-D2zOMlyQ.js","assets/scheduler-algos-DuZM4aA3.js","assets/utils-ClevuSU5.js","assets/index-wVXifvhx.css","assets/CalendarGrid-Cu-wNwvV.js","assets/CalendarLegend-CHTpk66n.js"])))=>i.map(i=>d[i]);
 import { j as e, B as G, a as g, r as C, C as E, D as T, M as j, F as M, A as X, T as P, R as $, b as H, c as I } from "./bootstrap-ui-DwpW4YAL.js";
-import { u as z, _ as U, __tla as __tla_0 } from "./index-V5tylbtI.js";
+import { u as z, _ as U, __tla as __tla_0 } from "./index-D2zOMlyQ.js";
 import { c as R } from "./react-vendor-Csw2ODfV.js";
 import { P as B } from "./papaparse.min-C2_IRGyt.js";
 import { u as y, w as W } from "./xlsx-BkaySFav.js";
@@ -15,7 +15,7 @@ let __tla = Promise.all([
     }
   })()
 ]).then(async () => {
-  const K = C.lazy(() => U(() => import("./CalendarHeader-CBMXKTAu.js"), __vite__mapDeps([0,1,2,3,4,5,6]))), J = C.lazy(() => U(() => import("./CalendarGrid-CJOrpqb_.js"), __vite__mapDeps([7,1,2,3,4,5,6]))), Q = C.lazy(() => U(() => import("./CalendarLegend-CHTpk66n.js"), __vite__mapDeps([8,1,2]))), Y = () => e.jsxs("div", {
+  const K = C.lazy(() => U(() => import("./CalendarHeader-BmB5Fptw.js"), __vite__mapDeps([0,1,2,3,4,5,6]))), J = C.lazy(() => U(() => import("./CalendarGrid-Cu-wNwvV.js"), __vite__mapDeps([7,1,2,3,4,5,6]))), Q = C.lazy(() => U(() => import("./CalendarLegend-CHTpk66n.js"), __vite__mapDeps([8,1,2]))), Y = () => e.jsxs("div", {
     className: "loading-container",
     style: {
       gridColumn: "1 / -1",
@@ -194,7 +194,7 @@ let __tla = Promise.all([
         email: l.email || "",
         timeMap: u,
         timeSlotsNum: h.length,
-        origin_availability: l.origin_availability
+        input_availability: l.input_availability
       };
     });
   };
@@ -255,7 +255,7 @@ let __tla = Promise.all([
           \u65E5\u671F: t.timeMap.get("date"),
           \u9762\u8A66\u6642\u9593: t.timeMap.get("time"),
           \u9762\u8A66\u5834\u6B21\u7DE8\u865F: t.timeMap.get("id"),
-          \u53EF\u9762\u8A66\u6642\u9593: t.origin_availability
+          \u53EF\u9762\u8A66\u6642\u9593: t.input_availability
         })).sort((t, r) => t.\u59D3\u540D.localeCompare(r.\u59D3\u540D))), x = "interviewees_schedule.csv";
         break;
       case "interviewers_stats":
@@ -344,10 +344,10 @@ let __tla = Promise.all([
       const o = D(false, p, c).map((s) => ({
         \u59D3\u540D: s.name,
         \u8077\u4F4D: s.position,
-        \u65E5\u671F: s.timeMap.get("date"),
-        \u9762\u8A66\u6642\u9593: s.timeMap.get("time"),
-        \u9762\u8A66\u5834\u6B21\u7DE8\u865F: s.timeMap.get("id"),
-        \u53EF\u9762\u8A66\u6642\u9593: s.origin_availability
+        \u65E5\u671F: s.timeMap.get("date") || "\u914D\u5C0D\u5931\u6557",
+        \u9762\u8A66\u6642\u9593: s.timeMap.get("time") || "\u914D\u5C0D\u5931\u6557",
+        \u9762\u8A66\u5834\u6B21\u7DE8\u865F: s.timeMap.get("id") || "\u914D\u5C0D\u5931\u6557",
+        \u53EF\u9762\u8A66\u6642\u9593: s.input_availability
       })).sort((s, i) => s.\u59D3\u540D.localeCompare(i.\u59D3\u540D)), n = y.json_to_sheet(o);
       y.book_append_sheet(l, n, "\u61C9\u8A66\u8005\u9762\u8A66\u5B89\u6392");
     }
