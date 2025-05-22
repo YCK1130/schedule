@@ -18,6 +18,12 @@ export const optimizedGreedyMatching = (
     const validInterviewers = interviewers.filter((interviewer) => interviewer.availability.length > 0);
     const validInterviewees = interviewees.filter((interviewee) => interviewee.availability.length > 0);
     
+    // 追蹤每個面試官的面試次數
+    const interviewerAssignmentCounts = new Map<string, number>();
+    validInterviewers.forEach(interviewer => {
+        interviewerAssignmentCounts.set(interviewer.id, 0);
+    });
+    
     // 如果沒有有效的面試官或應試者，直接返回
     if (validInterviewers.length === 0 || validInterviewees.length === 0) {
         // 將所有無效的面試官和應試者標記為未匹配
@@ -152,12 +158,26 @@ export const optimizedGreedyMatching = (
                             return isOverlappingTimeSlot(slot, timeSlot) && interview.interviewers.some(i => i.id === interviewer.id);
                         })
                     );
+                    
+                    // 按照面試官已安排的面試次數排序
+                    availableInterviewers.sort((a, b) => {
+                        const countA = interviewerAssignmentCounts.get(a.id) || 0;
+                        const countB = interviewerAssignmentCounts.get(b.id) || 0;
+                        return countA - countB; // 優先選擇分配次數少的面試官
+                    });
                 }
             } else {
                 // 使用原始邏輯
                 availableInterviewers = validInterviewers.filter((interviewer) => 
                     isTimeSlotAvailable(interviewer, timeSlot, interviews)
                 );
+                
+                // 按照面試官已安排的面試次數排序
+                availableInterviewers.sort((a, b) => {
+                    const countA = interviewerAssignmentCounts.get(a.id) || 0;
+                    const countB = interviewerAssignmentCounts.get(b.id) || 0;
+                    return countA - countB; // 優先選擇分配次數少的面試官
+                });
             }
 
             const result = checkRestrictions(groupRestrictions, availableInterviewers, availableInterviewees, interviews);
@@ -182,7 +202,12 @@ export const optimizedGreedyMatching = (
             result.interviewees.forEach((interviewee) => {
                 assignedIntervieweeIds.add(interviewee.id);
             });
+            
+            // 更新面試官的面試次數計數
             result.interviewers.forEach((interviewer) => {
+                const currentCount = interviewerAssignmentCounts.get(interviewer.id) || 0;
+                interviewerAssignmentCounts.set(interviewer.id, currentCount + 1);
+                
                 if (Array.isArray(interviewer.availability)) {
                     interviewer.availability = interviewer.availability.filter((slot) => slot !== timeSlot);
                 }
@@ -219,15 +244,29 @@ export const optimizedGreedyMatching = (
         const existPosition = Array.from(groupRestrictions.keys())
             .map((i) => i.split(":")[1])
             .filter((i) => i !== "所有");
+        
+        // 按照面試官已安排的面試次數排序
         const sortedInters = availableInters.sort((a, b) => {
+            const countA = interviewerAssignmentCounts.get(a.id) || 0;
+            const countB = interviewerAssignmentCounts.get(b.id) || 0;
+            if (countA !== countB) {
+                return countA - countB; // 優先選擇分配次數少的面試官
+            }
             return a.availability.length - b.availability.length;
         });
+        
         const { max } = groupRestrictions.get("interviewers:所有") || { min: 1, max: 100 };
         const numTargets = sortedInters.filter((interviewer) => !existPosition.includes(`${interviewer.position}`));
         const interviewersCount = Math.min(numTargets.length + ints.length, max) - ints.length;
         if (interviewersCount > 0) {
             const selectedInters = sortedInters.slice(0, interviewersCount);
             inter.interviewers.push(...selectedInters.map((i) => ({ id: i.id, name: i.name, position: i.position })));
+            
+            // 更新選中面試官的面試次數
+            selectedInters.forEach(interviewer => {
+                const currentCount = interviewerAssignmentCounts.get(interviewer.id) || 0;
+                interviewerAssignmentCounts.set(interviewer.id, currentCount + 1);
+            });
         }
     }
     
