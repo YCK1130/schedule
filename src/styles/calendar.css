@@ -341,8 +341,8 @@
 }
 
 .tooltip-content {
-  width: max-content;
-  max-width: var(--tooltip-max-width);
+  width: calc(max-content - 1rem);
+  max-width: calc(var(--tooltip-max-width) - 1rem);
 }
 /* 防止 tooltip 造成的版面跳動 */
 .tooltip {
