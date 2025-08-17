@@ -39,7 +39,7 @@ export const SchedulingProvider: React.FC<{
         results: new Map(),
         lastUpdated: 0,
     });
-    const { preprocessedSlots } = useDataSave();
+    const { preprocessedSlots,setViewMode } = useDataSave();
 
     // 使用一個新的狀態來儲存多個限制條件
     const [groupRestrictions, setGroupRestrictions] = useState<{
@@ -88,7 +88,7 @@ export const SchedulingProvider: React.FC<{
         
         console.debug("開始排程...");
         setLoading(true);
-        
+        setViewMode("scheduled")
         // 使用 setTimeout 將計算過程放到下一個事件迴圈，使 React 有機會先渲染 loading 狀態
         setTimeout(() => {
             try {

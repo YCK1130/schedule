@@ -10,6 +10,7 @@ export function scheduleInterviews(
 ): ScheduleResult {
     try {
         const { interviews, unmatched } = optimizedGreedyMatching(interviewers, interviewees, groupRestrictions, preprocessedSlots);
+        // console.log("排程結果：", interviews, unmatched);
         return { interviews, unmatched };
     } catch (error) {
         console.error("排程過程中發生錯誤：", error);

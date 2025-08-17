@@ -117,8 +117,10 @@ export const downloadSample = (type: string): void => {
  */
 export const loadSampleData = async (type: string, setFileName: (name: string) => void, onDataLoaded: (data: any[]) => void): Promise<void> => {
     const mapping: Map<string, string> = new Map([
-        ["interviewers", "/schedule/samples/real/interview_schedule_interviewers.csv"],
-        ["interviewees", "/schedule/samples/real/interview_schedule_interviewees.csv"],
+        ["interviewers", "/schedule/samples/real/interview_schedule_interviewers_2-3hr.csv"],
+        ["interviewees", "/schedule/samples/real/interview_schedule_interviewees_2-3hr.csv"],
+        // ["interviewers", "/schedule/samples/real_real/Interview Candidates (1).csv"],
+        // ["interviewees", "/schedule/samples/real_real/Interviewers Spreadsheet (2).csv"],
     ]);
     try {
         const response = await fetch(`${mapping.get(type)}`);

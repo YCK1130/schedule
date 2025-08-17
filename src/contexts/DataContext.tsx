@@ -60,7 +60,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [scheduledInterviews, setScheduledInterviews] = useState<ScheduledInterview[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [unmatchedResults, setUnmatchedResults] = useState<UnmatchedResult | null>(null);
-    const [viewMode, setViewMode] = useState<ViewMode>("scheduled");
+    const [viewMode, setViewMode] = useState<ViewMode>("unmatched");
     // 新增：用來存儲日期和時間範圍的計算結果
     const [displayInfo, setDisplayInfo] = useState({
         startDate: new Date(),
@@ -127,14 +127,14 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 const [startTime, endTime] = slot.split("/");
                 const startDate = new Date(startTime);
                 const endDate = new Date(endTime);
-                while (startDate.getTime() < endDate.getTime()) {
-                    const sHour = startDate.getHours();
-                    const sMinute = startDate.getMinutes();
-                    const key = getSlotKey(startDate, sHour, Math.round(sMinute / 60 + 1e-3) * 30);
-                    startDate.setMinutes(startDate.getMinutes() + 30);
-                    const originalSlot = newSlots.get(key);
-                    originalSlot?.availableInterviewers.push(interviewer);
-                }
+                // while (startDate.getTime() < endDate.getTime()) {
+                // }
+                const sHour = startDate.getHours();
+                const sMinute = startDate.getMinutes();
+                const key = getSlotKey(startDate, sHour, Math.round(sMinute / 60 + 1e-3) * 30);
+                startDate.setMinutes(startDate.getMinutes() + 30);
+                const originalSlot = newSlots.get(key);
+                originalSlot?.availableInterviewers.push(interviewer);
             });
         });
         interviewees.forEach((interviewee) => {
@@ -144,14 +144,14 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 const [startTime, endTime] = slot.split("/");
                 const startDate = new Date(startTime);
                 const endDate = new Date(endTime);
-                while (startDate.getTime() < endDate.getTime()) {
-                    const sHour = startDate.getHours();
-                    const sMinute = startDate.getMinutes();
-                    const key = getSlotKey(startDate, sHour, Math.round(sMinute / 60 + 1e-3) * 30);
-                    startDate.setMinutes(startDate.getMinutes() + 30);
-                    const originalSlot = newSlots.get(key);
-                    originalSlot?.availableInterviewees.push(interviewee);
-                }
+                // while (startDate.getTime() < endDate.getTime()) {
+                // }
+                const sHour = startDate.getHours();
+                const sMinute = startDate.getMinutes();
+                const key = getSlotKey(startDate, sHour, Math.round(sMinute / 60 + 1e-3) * 30);
+                startDate.setMinutes(startDate.getMinutes() + 30);
+                const originalSlot = newSlots.get(key);
+                originalSlot?.availableInterviewees.push(interviewee);
             });
         });
         scheduledInterviews.forEach((interview) => {
@@ -173,6 +173,7 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             byDateAndTime: newSlots,
             initialized: true,
         });
+        // console.log("預處理時間槽:", newSlots);
         const profilerEnd = performance.now();
         console.debug("預處理時間槽完成, 耗時:", profilerEnd - profilerStart, "毫秒");
         setLoading(false);

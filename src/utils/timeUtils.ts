@@ -144,18 +144,20 @@ export const splitIntoHourlySlots = (startDate: Date, endDate: Date): string[] =
     const currentSlotStart = new Date(startDate);
     
     while (currentSlotStart < endDate) {
-        // 創建當前時間段的結束時間（開始時間 + 1小時，或者如果剩餘時間不足1小時則為原始結束時間）
+        // 創建當前時間段的結束時間（開始時間 + 1小時）
         const currentSlotEnd = new Date(currentSlotStart);
         currentSlotEnd.setHours(currentSlotEnd.getHours() + 1);
         
-        // 確保不超過原始的結束時間
-        const slotEnd = currentSlotEnd <= endDate ? currentSlotEnd : new Date(endDate);
+        // 如果剩餘時間不足1小時，則丟棄這個時間段
+        if (currentSlotEnd > endDate) {
+            break;
+        }
         
         // 添加格式化後的時間段
-        slots.push(`${formatDateToString(currentSlotStart)}/${formatDateToString(slotEnd)}`);
+        slots.push(`${formatDateToString(currentSlotStart)}/${formatDateToString(currentSlotEnd)}`);
         
-        // 將開始時間設為當前結束時間，準備下一個小時的時間段
-        currentSlotStart.setTime(currentSlotEnd.getTime());
+        // 將開始時間往前移動30分鐘，準備下一個時間段
+        currentSlotStart.setMinutes(currentSlotStart.getMinutes() + 30);
     }
     
     return slots;

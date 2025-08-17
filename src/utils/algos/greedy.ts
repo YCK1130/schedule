@@ -9,6 +9,10 @@ export const optimizedGreedyMatching = (
     preprocessedSlots?: PreprocessedSlots
 ) => {
     // 先確保所有時間段格式正確
+    // console.log("interviewers:", interviewers);
+    // console.log("interviewees:", interviewees);
+    // console.log("groupRestrictions:", groupRestrictions);
+    // console.log("preprocessedSlots:", preprocessedSlots);
     const unmatched = {
         interviewers: [] as Interviewer[],
         interviewees: [] as Interviewee[],
@@ -47,7 +51,6 @@ export const optimizedGreedyMatching = (
 
     // 收集所有可能的時間段
     let allTimeSlots = getAllTimeSlots(interviewers, interviewees);
-
     // 使用預處理資料來排序時間段（按照可用人數從少到多）
     if (preprocessedSlots && preprocessedSlots.initialized) {
         console.debug("使用預處理資料來排序時間段");
@@ -97,6 +100,7 @@ export const optimizedGreedyMatching = (
             return timeA.getTime() - timeB.getTime();
         });
     }
+    
 
     // 追蹤已分配的應試者
     const assignedIntervieweeIds = new Set<string>();
@@ -209,7 +213,7 @@ export const optimizedGreedyMatching = (
                 interviewerAssignmentCounts.set(interviewer.id, currentCount + 1);
                 
                 if (Array.isArray(interviewer.availability)) {
-                    interviewer.availability = interviewer.availability.filter((slot) => slot !== timeSlot);
+                    interviewer.availability = interviewer.availability.filter((slot) => !isOverlappingTimeSlot(slot, timeSlot));
                 }
             });
         }

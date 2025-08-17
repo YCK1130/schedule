@@ -13,7 +13,6 @@ const DisplayContainer: React.FC = () => {
             </Row>
             <Row className="fix-width-container">
                 <Col>
-
                     <ResultsDisplay />
                 </Col>
             </Row>
