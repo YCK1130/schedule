@@ -124,9 +124,9 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             if (!interviewer.availability || !Array.isArray(interviewer.availability)) return;
             interviewer.availability.forEach((slot) => {
                 if (!slot.includes("/") && !slot.includes(":")) return;
-                const [startTime, endTime] = slot.split("/");
+                const [startTime, _] = slot.split("/");
                 const startDate = new Date(startTime);
-                const endDate = new Date(endTime);
+                // const endDate = new Date(endTime);
                 // while (startDate.getTime() < endDate.getTime()) {
                 // }
                 const sHour = startDate.getHours();
@@ -141,9 +141,9 @@ export const DataSaveProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             if (!interviewee.availability || !Array.isArray(interviewee.availability)) return;
             interviewee.availability.forEach((slot) => {
                 if (!slot.includes("/") && !slot.includes(":")) return;
-                const [startTime, endTime] = slot.split("/");
+                const [startTime, _] = slot.split("/");
                 const startDate = new Date(startTime);
-                const endDate = new Date(endTime);
+                // const endDate = new Date(endTime);
                 // while (startDate.getTime() < endDate.getTime()) {
                 // }
                 const sHour = startDate.getHours();
