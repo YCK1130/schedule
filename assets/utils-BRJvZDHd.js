@@ -149,9 +149,8 @@ const C = (s, n = "\u6240\u6709") => {
   const t = [], e = new Date(s);
   for (; e < n; ) {
     const r = new Date(e);
-    r.setHours(r.getHours() + 1);
-    const o = r <= n ? r : new Date(n);
-    t.push(`${S(e)}/${S(o)}`), e.setTime(r.getTime());
+    if (r.setHours(r.getHours() + 1), r > n) break;
+    t.push(`${S(e)}/${S(r)}`), e.setMinutes(e.getMinutes() + 30);
   }
   return t;
 }, x = (s) => {

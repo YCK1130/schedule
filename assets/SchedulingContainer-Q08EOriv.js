@@ -1,10 +1,10 @@
 import { r as Kn, j as R, F as Ee, a as ar, C as Wi, O as m_, d as A_, R as Ui, b as Di, c as y_ } from "./bootstrap-ui-DwpW4YAL.js";
-import { a as ys, u as Ss } from "./index-D2zOMlyQ.js";
+import { a as ys, u as Ss } from "./index-BiLnEIg1.js";
 import { c as or } from "./react-vendor-Csw2ODfV.js";
 import { P as S_ } from "./papaparse.min-C2_IRGyt.js";
 import { r as R_, u as C_ } from "./xlsx-BkaySFav.js";
-import { b as I_ } from "./utils-ClevuSU5.js";
-import "./scheduler-algos-DuZM4aA3.js";
+import { b as I_ } from "./utils-BRJvZDHd.js";
+import "./scheduler-algos-Bqg1XO87.js";
 var pt = { exports: {} };
 /**
 * @license
@@ -3112,7 +3112,7 @@ const P_ = /* @__PURE__ */ new Map([["\u5E79\u90E8\u59D3\u540D", "name"], ["\u75
   const C = `/schedule/samples/sample_${m}.csv`, s = document.createElement("a");
   s.href = C, s.download = `sample_${m}.csv`, document.body.appendChild(s), s.click(), document.body.removeChild(s);
 }, As = async (m, C, s) => {
-  const U = /* @__PURE__ */ new Map([["interviewers", "/schedule/samples/real/interview_schedule_interviewers.csv"], ["interviewees", "/schedule/samples/real/interview_schedule_interviewees.csv"]]);
+  const U = /* @__PURE__ */ new Map([["interviewers", "/schedule/samples/real/interview_schedule_interviewers_2-3hr.csv"], ["interviewees", "/schedule/samples/real/interview_schedule_interviewees_2-3hr.csv"]]);
   try {
     const rn = await (await fetch(`${U.get(m)}`)).blob(), K = new File([rn], `sample_${m}.csv`, { type: "text/csv" });
     await Fi(K, C, s, m);

@@ -1,4 +1,4 @@
-import { g as z, p as E, i as I, c as x } from "./utils-ClevuSU5.js";
+import { g as z, p as E, i as I, c as x } from "./utils-BRJvZDHd.js";
 const C = (g, b, f, s) => {
   const r = { interviewers: [], interviewees: [], reasons: [] }, o = [], v = g.filter((t) => t.availability.length > 0), y = b.filter((t) => t.availability.length > 0), l = /* @__PURE__ */ new Map();
   if (v.forEach((t) => {
@@ -39,7 +39,7 @@ const C = (g, b, f, s) => {
       const i = $(n, s);
       i && (c = i.availableInterviewers.filter((e) => !o.some((a) => {
         const u = `${a.startTime}/${a.endTime}`;
-        return F(u, n) && a.interviewers.some((p) => p.id === e.id);
+        return S(u, n) && a.interviewers.some((p) => p.id === e.id);
       })), c.sort((e, a) => {
         const u = l.get(e.id) || 0, p = l.get(a.id) || 0;
         return u - p;
@@ -58,7 +58,7 @@ const C = (g, b, f, s) => {
       B.add(i.id);
     }), d.interviewers.forEach((i) => {
       const e = l.get(i.id) || 0;
-      l.set(i.id, e + 1), Array.isArray(i.availability) && (i.availability = i.availability.filter((a) => a !== n));
+      l.set(i.id, e + 1), Array.isArray(i.availability) && (i.availability = i.availability.filter((a) => !S(a, n)));
     });
   }
   for (const t of o) {
@@ -69,7 +69,7 @@ const C = (g, b, f, s) => {
       e && (c = e.availableInterviewers.filter((a) => !n.includes(a.id) && !o.some((u) => {
         if (u === t) return false;
         const p = `${u.startTime}/${u.endTime}`;
-        return F(p, m) && u.interviewers.some((M) => M.id === a.id);
+        return S(p, m) && u.interviewers.some((M) => M.id === a.id);
       })));
     } else c = v.filter((e) => I(e, m, o.filter((a) => a !== t)) && !n.includes(e.id));
     const d = Array.from(f.keys()).map((e) => e.split(":")[1]).filter((e) => e !== "\u6240\u6709"), T = c.sort((e, a) => {
@@ -84,12 +84,12 @@ const C = (g, b, f, s) => {
       });
     }
   }
-  const S = y.filter((t) => !B.has(t.id));
-  return S.forEach((t) => {
+  const F = y.filter((t) => !B.has(t.id));
+  return F.forEach((t) => {
     r.interviewees.includes(t) || (r.interviewees.push(t), r.reasons.push(`\u7121\u6CD5\u70BA\u61C9\u8A66\u8005 ${t.name} \u627E\u5230\u7B26\u5408\u9650\u5236\u689D\u4EF6\u7684\u6642\u6BB5`));
-  }), { interviews: o.map((t, n) => ({ ...t, id: n + 1 })), unmatched: { interviewers: v, interviewees: S, reasons: r.reasons } };
+  }), { interviews: o.map((t, n) => ({ ...t, id: n + 1 })), unmatched: { interviewers: v, interviewees: F, reasons: r.reasons } };
 };
-function F(g, b) {
+function S(g, b) {
   try {
     const [f, s] = g.split("/"), [r, o] = b.split("/"), v = new Date(f), y = new Date(s), l = new Date(r), w = new Date(o);
     return v < w && l < y;

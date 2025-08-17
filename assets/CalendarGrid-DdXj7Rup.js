@@ -1,8 +1,8 @@
 import { j as e, r as y, O as C, d as S } from "./bootstrap-ui-DwpW4YAL.js";
-import { u as k } from "./index-D2zOMlyQ.js";
-import { d as M, e as R, h as L, j as O, k as P } from "./utils-ClevuSU5.js";
+import { u as k } from "./index-BiLnEIg1.js";
+import { d as M, e as R, h as L, j as O, k as P } from "./utils-BRJvZDHd.js";
 import "./react-vendor-Csw2ODfV.js";
-import "./scheduler-algos-DuZM4aA3.js";
+import "./scheduler-algos-Bqg1XO87.js";
 const F = ({ availability: a }) => {
   const { interviewersNum: s, intervieweesNum: m } = a;
   return e.jsx("div", { className: "calendar-time-slot", children: e.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", justifyContent: "start", width: "100%" }, children: [s > 0 && e.jsxs("div", { style: { color: "#4E6688" }, children: ["\u9762\u8A66\u5B98: ", s] }), m > 0 && e.jsxs("div", { style: { color: "#DDA853" }, children: ["\u61C9\u8A66\u8005: ", m] })] }) });
