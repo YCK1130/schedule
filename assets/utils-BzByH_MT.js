@@ -147,10 +147,10 @@ const C = (s, n = "\u6240\u6709") => {
   return t.trim() === "" ? [] : [t];
 }).filter(Boolean)) : [], S = (s) => s.toLocaleString("sv-SE").replace(" ", "T").substring(0, 19), H = (s, n) => {
   const t = [], e = new Date(s);
-  for (; e < n; ) {
+  for (e.setMinutes(0, 0, 0); e < n; ) {
     const r = new Date(e);
     if (r.setHours(r.getHours() + 1), r > n) break;
-    t.push(`${S(e)}/${S(r)}`), e.setMinutes(e.getMinutes() + 30);
+    t.push(`${S(e)}/${S(r)}`), e.setMinutes(r.getMinutes() + 60);
   }
   return t;
 }, x = (s) => {
