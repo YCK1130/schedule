@@ -143,6 +143,8 @@ export const splitIntoHourlySlots = (startDate: Date, endDate: Date): string[] =
     const slots: string[] = [];
     const currentSlotStart = new Date(startDate);
     
+    // [0820] 調整為整點配對
+    currentSlotStart.setMinutes(0, 0, 0);
     while (currentSlotStart < endDate) {
         // 創建當前時間段的結束時間（開始時間 + 1小時）
         const currentSlotEnd = new Date(currentSlotStart);
@@ -156,8 +158,9 @@ export const splitIntoHourlySlots = (startDate: Date, endDate: Date): string[] =
         // 添加格式化後的時間段
         slots.push(`${formatDateToString(currentSlotStart)}/${formatDateToString(currentSlotEnd)}`);
         
-        // 將開始時間往前移動30分鐘，準備下一個時間段
-        currentSlotStart.setMinutes(currentSlotStart.getMinutes() + 30);
+        // 將開始時間往前移動60分鐘，準備下一個時間段
+        // currentSlotStart.setMinutes(currentSlotStart.getMinutes() + 30);
+        currentSlotStart.setMinutes(currentSlotEnd.getMinutes() + 60);
     }
     
     return slots;

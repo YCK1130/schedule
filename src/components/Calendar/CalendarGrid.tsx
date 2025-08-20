@@ -177,18 +177,24 @@ const CalendarGrid: React.FC = () => {
                 getDates(startDate, daysToShow).map((date, dateIndex) => (
                     <div key={`column-${dateIndex}`} className="day-column">
                         {timeSlots.map((timeSlot, timeIndex) => {
-                            const availabilityData = getAvailabilityData(date, timeSlot);
+                            // 因為更改為整點配對，調整 slot 時間顯示維持原有的半點顯示邏輯
+                            let adjustedTimeSlot = timeSlot;
+                            let showSchedule = viewMode === "scheduled" && scheduledInterviews.length > 0
+                            if (timeSlot.endsWith(":30") && !showSchedule) {
+                                adjustedTimeSlot = adjustedTimeSlot.replace(":30", ":00");
+                            }
+                            const availabilityData = getAvailabilityData(date, showSchedule?timeSlot: adjustedTimeSlot);
                             return (
                                 <OverlayTrigger
                                     key={`overlay-${dateIndex}-${timeIndex}`}
                                     placement="auto"
                                     delay={{ show: 50, hide: 100 }}
-                                    overlay={renderTooltip(date, timeSlot)}
+                                    overlay={renderTooltip(date, adjustedTimeSlot)}
                                 >
                                     <div className="time-slot-wrapper" key={`slot-${dateIndex}-${timeIndex}`}>
                                         <CalendarTimeSlot
                                             availability={availabilityData}
-                                            showSchedule={viewMode === "scheduled" && scheduledInterviews.length > 0}
+                                            showSchedule={showSchedule}
                                         />
                                     </div>
                                 </OverlayTrigger>

@@ -166,7 +166,7 @@ export const ResultsDisplay: React.FC = () => {
                             <thead>
                                 <tr>
                                     <th style={{ textAlign: "center", width: "3.5em", textWrap: "balance" }}>編號</th>
-                                    <th style={{ textAlign: "center", width: "3em" }}>日期</th>
+                                    <th style={{ textAlign: "center", width: "3.5em" }}>日期</th>
                                     <th style={{ textAlign: "center", width: "8em" }}>時間</th>
                                     <th style={{ textAlign: "center" }}>面試者</th>
                                     <th style={{ textAlign: "center" }}>面試官</th>
@@ -176,7 +176,7 @@ export const ResultsDisplay: React.FC = () => {
                                 {scheduledInterviews.map((interview) => (
                                     <tr key={`${interview.interviewees[0].id}-${interview.startTime}`}>
                                         <td style={{ textAlign: "center", width: "3.5em" }}>{interview.id}</td>
-                                        <td style={{ textAlign: "center", width: "3em" }}>
+                                        <td style={{ textAlign: "center", width: "3.5em" }}>
                                             {formatTimeRange(interview.startTime, interview.endTime).date}
                                         </td>
                                         <td style={{ textAlign: "center", width: "8em" }}>
