@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://yck1130.github.io/schedule/sitemap.xml
+
+# Disallow crawling of unnecessary files
+Disallow: /assets/
+Disallow: /*.json$
+Disallow: /*.csv$
+Disallow: /*.xlsx$
