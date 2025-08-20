@@ -131,7 +131,7 @@ export const SchedulingProvider: React.FC<{
                             updatedRestriction[typedKey] = restriction[typedKey] as number;
                         } else if (typedKey !== "minCount" && typedKey !== "maxCount") {
                             // 處理非數值屬性
-                            updatedRestriction[typedKey] = restriction[typedKey] as any;
+                            updatedRestriction[typedKey] = restriction[typedKey] as string;
                         }
                     });
 

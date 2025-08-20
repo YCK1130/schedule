@@ -81,7 +81,7 @@ function generateInterviewees(count: number): IntervieweeData[] {
 /**
  * 保存數據為 CSV 檔案
  */
-function saveToCSV(data: any[], filename: string): void {
+function saveToCSV(data: unknown[], filename: string): void {
     const csv = Papa.unparse(data);
     writeFileSync(filename, csv);
 }

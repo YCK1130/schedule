@@ -179,7 +179,7 @@ const CalendarGrid: React.FC = () => {
                         {timeSlots.map((timeSlot, timeIndex) => {
                             // 因為更改為整點配對，調整 slot 時間顯示維持原有的半點顯示邏輯
                             let adjustedTimeSlot = timeSlot;
-                            let showSchedule = viewMode === "scheduled" && scheduledInterviews.length > 0
+                            const showSchedule = viewMode === "scheduled" && scheduledInterviews.length > 0
                             if (timeSlot.endsWith(":30") && !showSchedule) {
                                 adjustedTimeSlot = adjustedTimeSlot.replace(":30", ":00");
                             }

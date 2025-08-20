@@ -68,7 +68,7 @@ export const exportToCsv = (
     let fileName = "";
 
     switch (exportType) {
-        case "interviews":
+        case "interviews": {
             // 匯出面試數據
             const interviewsData = scheduledInterviews.map((interview) => ({
                 interviewers: interview.interviewers.map((int) => int.name).join(", "),
@@ -92,8 +92,9 @@ export const exportToCsv = (
             );
             fileName = "interview_schedule.csv";
             break;
+        }
 
-        case "interviewers":
+        case "interviewers": {
             // 匯出面試官數據
             const interviewersData = prepareParticipantData(true, interviewers, scheduledInterviews);
             const flatData = interviewersData.reduce((acc, curr) => {
@@ -126,8 +127,9 @@ export const exportToCsv = (
             );
             fileName = "interviewers_schedule.csv";
             break;
+        }
 
-        case "interviewees":
+        case "interviewees": {
             // 匯出應試者數據
             const intervieweesData = prepareParticipantData(false, interviewees, scheduledInterviews);
 
@@ -145,8 +147,9 @@ export const exportToCsv = (
             );
             fileName = "interviewees_schedule.csv";
             break;
+        }
 
-        case "interviewers_stats":
+        case "interviewers_stats": {
             const interviewersStatsData = prepareParticipantData(true, interviewers, scheduledInterviews);
             const flatStatsData = interviewersStatsData.map((curr) => {
                 const { name, position, timeSlotsNum } = curr;
@@ -164,6 +167,7 @@ export const exportToCsv = (
             );
             fileName = "interviewers_stats.csv";
             break;
+        }
     }
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });

@@ -33,12 +33,10 @@ const UseDataSchedulingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 function App() {
     return (
         <DataSaveProvider>
-            <UseDataSchedulingProvider>
-                <Suspense fallback={<LoadingFallback />}>
-                    <SchedulingContainer />
-                </Suspense>
-            </UseDataSchedulingProvider>
             <Suspense fallback={<LoadingFallback />}>
+                <UseDataSchedulingProvider>
+                    <SchedulingContainer />
+                </UseDataSchedulingProvider>
                 <DisplayContainer />
             </Suspense>
         </DataSaveProvider>

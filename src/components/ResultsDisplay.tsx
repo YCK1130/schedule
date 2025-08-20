@@ -30,7 +30,7 @@ export const ResultsDisplay: React.FC = () => {
     const handleExportToExcel = () => {
         // 過濾選中的匯出選項
         const selectedOptions = Object.entries(exportOptions)
-            .filter(([_, isSelected]) => isSelected)
+            .filter(([, isSelected]) => isSelected)
             .map(([option]) => option);
         
         if (selectedOptions.length === 0) return;

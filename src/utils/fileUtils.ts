@@ -79,7 +79,7 @@ export const handleFileUpload = async (
             Papa.parse(file, {
                 header: true,
                 complete: (results) => {
-                    onDataLoaded(formatData(results.data));
+                    onDataLoaded(formatData(results.data as any));
                 },
                 error: (error) => {
                     console.error("Error parsing file:", error);

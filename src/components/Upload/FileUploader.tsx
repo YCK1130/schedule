@@ -44,7 +44,7 @@ const FileUploader: React.FC = () => {
             interviewees: renderGroupRestriction("interviewees"),
         };
         return result;
-    }, [groupRestrictions, positions]);
+    }, [groupRestrictions, positions, renderGroupRestriction]);
 
     // 限制條件渲染函數
     function renderGroupRestriction(groupId: GroupType) {

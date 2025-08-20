@@ -312,28 +312,28 @@ export const countInterviewerAssignments = (scheduledInterviews: ScheduledInterv
 /**
  * Parse raw CSV data into typed objects
  */
-export function parseInterviewers(data: any[]): Interviewer[] {
+export function parseInterviewers(data: Record<string, unknown>[]): Interviewer[] {
     return data.map((row) => ({
         id: row.id?.toString() || String(Math.random()).slice(2, 10),
-        name: row.name,
-        email: row.email,
-        availability: parseAvailability(row.availability), // 直接返回陣列
-        origin_availability: parseAvailability(row.availability), // 直接返回陣列
-        input_availability: parseAvailability(row.availability), // 直接返回陣列
-        specialization: row.specialization,
+        name: row.name as string,
+        email: row.email as string,
+        availability: parseAvailability(row.availability as string | string[]), // 直接返回陣列
+        origin_availability: parseAvailability(row.availability as string | string[]), // 直接返回陣列
+        input_availability: parseAvailability(row.availability as string | string[]), // 直接返回陣列
+        specialization: row.specialization as string | undefined,
     }));
 }
 
-export function parseInterviewees(data: any[]): Interviewee[] {
+export function parseInterviewees(data: Record<string, unknown>[]): Interviewee[] {
     return data.map((row) => ({
         id: row.id?.toString() || String(Math.random()).slice(2, 10),
-        name: row.name,
-        email: row.email,
-        position: row.position || row.positionApplied,
-        positionApplied: row.positionApplied || row.position,
-        availability: parseAvailability(row.availability), // 直接返回陣列
-        origin_availability: parseAvailability(row.availability), // 直接返回陣列
-        input_availability: parseAvailability(row.availability), // 直接返回陣列
+        name: row.name as string,
+        email: row.email as string,
+        position: (row.position || row.positionApplied) as string,
+        positionApplied: (row.positionApplied || row.position) as string,
+        availability: parseAvailability(row.availability as string | string[]), // 直接返回陣列
+        origin_availability: parseAvailability(row.availability as string | string[]), // 直接返回陣列
+        input_availability: parseAvailability(row.availability as string | string[]), // 直接返回陣列
     }));
 }
 
